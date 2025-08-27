@@ -22,6 +22,36 @@ static void update_time_timer_cb(lv_timer_t* timer) {
   }
 }
 
+// Roller 模式选择与 ECO 图标联动
+static void roller_value_changed_cb(lv_event_t* e) {
+  LV_UNUSED(e);
+  if (!ui_Roller1 || !ui_ECO) return;
+  uint16_t sel = lv_roller_get_selected(ui_Roller1);
+  if ((sel % 3) == 1) {
+    /* 经济模式 */
+    lv_obj_add_state(ui_ECO, LV_STATE_CHECKED);
+  } else {
+    lv_obj_clear_state(ui_ECO, LV_STATE_CHECKED);
+  }
+}
+
+void init_phase2_features(void) {
+  // 绑定 Roller 的值改变事件
+  if (ui_Roller1) {
+    lv_obj_add_event_cb(ui_Roller1, roller_value_changed_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    // 根据当前初始选择同步 ECO 状态 
+    roller_value_changed_cb(NULL);
+  }
+}
+
+// 阶段二：为 Screen2 的四个面板标签设置固定文本
+void init_screen2_static_data(void) {
+  if (ui_Label1) lv_label_set_text(ui_Label1, "2.5 Kpa\n30°C");
+  if (ui_Label3) lv_label_set_text(ui_Label3, "2.5 Kpa\n30°C");
+  if (ui_Label4) lv_label_set_text(ui_Label4, "2.5 Kpa\n30°C");
+  if (ui_Label5) lv_label_set_text(ui_Label5, "2.5 Kpa\n30°C");
+}
+
 void init_time_display(void) {  // 初始化时间显示控件
   lv_timer_create(update_time_timer_cb, 1000,
                   NULL);  // 创建定时器，每秒更新一次时间

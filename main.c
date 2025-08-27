@@ -68,6 +68,10 @@ int main(int argc, char **argv)
     
     // 时间显示控件
     init_time_display();
+    // Roller 联动 ECO 
+    init_phase2_features();
+    // Screen2 静态数据
+    init_screen2_static_data();
 
     /* 主循环 */
     while(1) {

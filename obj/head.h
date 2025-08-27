@@ -16,6 +16,8 @@
 
 void init_time_display(void);     // 时间显示函数
 void handle_console_input(void);  // 处理控制台输入的函数
+void init_phase2_features(void);   // 绑定 Roller 事件并同步 ECO
+void init_screen2_static_data(void); // 设置 Screen2 的静态胎压与温度值
 
 lv_anim_t * Leftflash_Animation(lv_obj_t * TargetObject, int delay);
 lv_anim_t * Rightflash_Animation(lv_obj_t * TargetObject, int delay);
