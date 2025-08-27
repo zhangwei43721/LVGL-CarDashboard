@@ -2,6 +2,7 @@
 #define __HEAD_H__
 
 #include <stdio.h>
+#include <time.h>
 #include <unistd.h>
 
 // #include "lv_png.h"
@@ -11,11 +12,6 @@
 #include "lvgl/examples/lv_examples.h"
 #include "lvgl/lvgl.h"
 
-void obj_pos1(void);
-void obj_xx(void);
-void obj_sjpg_1(void);
-void obj_sjpg_2(void);
-void obj_freetype_text(void);
-void lv_flex_test(void);
+void init_time_display(void);  // 时间显示函数
 
 #endif /* __HEAD_H__ */

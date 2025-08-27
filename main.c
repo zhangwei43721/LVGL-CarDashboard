@@ -65,12 +65,10 @@ int main(int argc, char **argv)
     /* === 调用 UI 代码 === */
     // obj_pos1();
     ui_init();
-
     
-    // obj_sjpg_1();  // 用图片数组显示
-    // obj_sjpg_2();  // 用指定路径显示 
-    // obj_freetype_text();// 显示文字
-    // lv_flex_test();   // 布局测试
+    // 时间显示控件
+    init_time_display();
+
     /* 主循环 */
     while(1) {
         lv_timer_handler();

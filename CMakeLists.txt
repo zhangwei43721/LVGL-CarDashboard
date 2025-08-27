@@ -38,6 +38,7 @@ file(GLOB_RECURSE ALL_SOURCES
     # "lvgl/demos/*.c" 
     # "lvgl/examples/*.c" 
     "UI/*.c"
+    "obj/*.c"
 )
 
 # --- 构建主程序 ---
