@@ -1,0 +1,25 @@
+SET(SOURCES components/ui_comp_rfidcontainer.c
+    components/ui_comp.c
+    screens/ui_Screen1.c
+    ui.c
+    components/ui_comp_hook.c
+    ui_helpers.c
+    images/ui_img_1276914373.c
+    images/ui_img_1103686941.c
+    images/ui_img_170937940.c
+    images/ui_img_1357973862.c
+    images/ui_img_1294076047.c
+    images/ui_img_837434941.c
+    images/ui_img_837427518.c
+    images/ui_img_837428543.c
+    images/ui_img_1181061765.c
+    images/ui_img_896081354.c
+    images/ui_img_896082379.c
+    images/ui_img_869378988.c
+    images/ui_img_424233258.c
+    images/ui_img_1357980260.c
+    fonts/ui_font_MiSans15.c
+    fonts/ui_font_MiSans18.c
+    fonts/ui_font_MiSans20.c)
+
+add_library(ui ${SOURCES})
