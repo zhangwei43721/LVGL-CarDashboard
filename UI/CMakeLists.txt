@@ -4,6 +4,7 @@ SET(SOURCES components/ui_comp_rfidcontainer.c
     ui.c
     components/ui_comp_hook.c
     ui_helpers.c
+    ui_events.c
     images/ui_img_1276914373.c
     images/ui_img_1103686941.c
     images/ui_img_170937940.c

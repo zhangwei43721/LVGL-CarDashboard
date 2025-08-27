@@ -10,6 +10,10 @@
 extern "C" {
 #endif
 
+void EngineIconBright(lv_event_t * e);
+void SeatBeltIconBright(lv_event_t * e);
+void LowEngineOilIconBright(lv_event_t * e);
+
 #ifdef __cplusplus
 } /*extern "C"*/
 #endif

@@ -33,8 +33,11 @@ extern void ui_event_HBChange(lv_event_t * e);
 extern lv_obj_t * ui_HBChange;
 extern lv_obj_t * ui_Left;
 extern lv_obj_t * ui_Right;
+extern void ui_event_Engine(lv_event_t * e);
 extern lv_obj_t * ui_Engine;
+extern void ui_event_seat_belt(lv_event_t * e);
 extern lv_obj_t * ui_seat_belt;
+extern void ui_event_Low_engine_oil(lv_event_t * e);
 extern lv_obj_t * ui_Low_engine_oil;
 // CUSTOM VARIABLES
 

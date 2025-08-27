@@ -45,6 +45,33 @@ void ui_event_HBChange(lv_event_t * e)
     }
 }
 
+void ui_event_Engine(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+
+    if(event_code == LV_EVENT_CLICKED) {
+        EngineIconBright(e);
+    }
+}
+
+void ui_event_seat_belt(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+
+    if(event_code == LV_EVENT_CLICKED) {
+        SeatBeltIconBright(e);
+    }
+}
+
+void ui_event_Low_engine_oil(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+
+    if(event_code == LV_EVENT_CLICKED) {
+        LowEngineOilIconBright(e);
+    }
+}
+
 // build funtions
 
 void ui_Screen1_screen_init(void)
@@ -284,6 +311,9 @@ void ui_Screen1_screen_init(void)
 
     lv_obj_add_event_cb(ui_ECOChange, ui_event_ECOChange, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_HBChange, ui_event_HBChange, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_Engine, ui_event_Engine, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_seat_belt, ui_event_seat_belt, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_Low_engine_oil, ui_event_Low_engine_oil, LV_EVENT_ALL, NULL);
 
 }
 
