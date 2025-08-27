@@ -2,6 +2,8 @@
 #define __HEAD_H__
 
 #include <stdio.h>
+#include <string.h>
+#include <sys/select.h>  // io操作
 #include <time.h>
 #include <unistd.h>
 
@@ -12,6 +14,10 @@
 #include "lvgl/examples/lv_examples.h"
 #include "lvgl/lvgl.h"
 
-void init_time_display(void);  // 时间显示函数
+void init_time_display(void);     // 时间显示函数
+void handle_console_input(void);  // 处理控制台输入的函数
+
+lv_anim_t * Leftflash_Animation(lv_obj_t * TargetObject, int delay);
+lv_anim_t * Rightflash_Animation(lv_obj_t * TargetObject, int delay);
 
 #endif /* __HEAD_H__ */

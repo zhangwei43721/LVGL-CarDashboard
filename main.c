@@ -71,6 +71,7 @@ int main(int argc, char **argv)
 
     /* 主循环 */
     while(1) {
+        handle_console_input();
         lv_timer_handler();
         usleep(5 * 1000);
     }
