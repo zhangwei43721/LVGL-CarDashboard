@@ -1,6 +1,7 @@
 components/ui_comp_rfidcontainer.c
 components/ui_comp.c
 screens/ui_Screen1.c
+screens/ui_Screen2.c
 ui.c
 components/ui_comp_hook.c
 ui_helpers.c
@@ -19,6 +20,8 @@ images/ui_img_896082379.c
 images/ui_img_869378988.c
 images/ui_img_424233258.c
 images/ui_img_1357980260.c
+images/ui_img_car_png.c
 fonts/ui_font_MiSans15.c
 fonts/ui_font_MiSans18.c
 fonts/ui_font_MiSans20.c
+fonts/ui_font_TIME.c

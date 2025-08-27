@@ -13,6 +13,7 @@ extern "C" {
 // SCREEN: ui_Screen1
 extern void ui_Screen1_screen_init(void);
 extern void ui_Screen1_screen_destroy(void);
+extern void ui_event_Screen1(lv_event_t * e);
 extern lv_obj_t * ui_Screen1;
 extern lv_obj_t * ui_Container1;
 extern lv_obj_t * ui_ECO;
@@ -25,8 +26,11 @@ extern lv_obj_t * ui_Oil;
 extern lv_obj_t * ui_OilPoint;
 extern lv_obj_t * ui_KmTable;
 extern lv_obj_t * ui_KmPoint;
+extern lv_obj_t * ui_ODO;
+extern lv_obj_t * ui_TRIP;
 extern lv_obj_t * ui_Tachometer;
 extern lv_obj_t * ui_TMeterpoint;
+extern lv_obj_t * ui_TIME;
 extern lv_obj_t * ui_DirectionContainer;
 extern lv_obj_t * ui_High_beam;
 extern void ui_event_HBChange(lv_event_t * e);
@@ -35,10 +39,17 @@ extern lv_obj_t * ui_Left;
 extern lv_obj_t * ui_Right;
 extern void ui_event_Engine(lv_event_t * e);
 extern lv_obj_t * ui_Engine;
+extern void ui_event_EngineChange(lv_event_t * e);
+extern lv_obj_t * ui_EngineChange;
 extern void ui_event_seat_belt(lv_event_t * e);
 extern lv_obj_t * ui_seat_belt;
+extern void ui_event_BeltChange(lv_event_t * e);
+extern lv_obj_t * ui_BeltChange;
 extern void ui_event_Low_engine_oil(lv_event_t * e);
 extern lv_obj_t * ui_Low_engine_oil;
+extern void ui_event_LowEgOilChange(lv_event_t * e);
+extern lv_obj_t * ui_LowEgOilChange;
+extern lv_obj_t * ui_Roller1;
 // CUSTOM VARIABLES
 
 #ifdef __cplusplus

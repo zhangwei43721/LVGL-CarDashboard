@@ -19,6 +19,7 @@ extern "C" {
 
 ///////////////////// SCREENS ////////////////////
 #include "screens/ui_Screen1.h"
+#include "screens/ui_Screen2.h"
 
 ///////////////////// VARIABLES ////////////////////
 extern lv_anim_t * KmRotate_Animation(lv_obj_t * TargetObject, int delay);
@@ -46,11 +47,13 @@ LV_IMG_DECLARE(ui_img_896082379);    // assets/路径 193.png
 LV_IMG_DECLARE(ui_img_869378988);    // assets/组 76.png
 LV_IMG_DECLARE(ui_img_424233258);    // assets/组 100.png
 LV_IMG_DECLARE(ui_img_1357980260);    // assets/组 90.png
+LV_IMG_DECLARE(ui_img_car_png);    // assets/Car.png
 
 // FONTS
 LV_FONT_DECLARE(ui_font_MiSans15);
 LV_FONT_DECLARE(ui_font_MiSans18);
 LV_FONT_DECLARE(ui_font_MiSans20);
+LV_FONT_DECLARE(ui_font_TIME);
 
 // UI INIT
 void ui_init(void);

@@ -16,17 +16,34 @@ lv_obj_t * ui_Oil = NULL;
 lv_obj_t * ui_OilPoint = NULL;
 lv_obj_t * ui_KmTable = NULL;
 lv_obj_t * ui_KmPoint = NULL;
+lv_obj_t * ui_ODO = NULL;
+lv_obj_t * ui_TRIP = NULL;
 lv_obj_t * ui_Tachometer = NULL;
 lv_obj_t * ui_TMeterpoint = NULL;
+lv_obj_t * ui_TIME = NULL;
 lv_obj_t * ui_DirectionContainer = NULL;
 lv_obj_t * ui_High_beam = NULL;
 lv_obj_t * ui_HBChange = NULL;
 lv_obj_t * ui_Left = NULL;
 lv_obj_t * ui_Right = NULL;
 lv_obj_t * ui_Engine = NULL;
+lv_obj_t * ui_EngineChange = NULL;
 lv_obj_t * ui_seat_belt = NULL;
+lv_obj_t * ui_BeltChange = NULL;
 lv_obj_t * ui_Low_engine_oil = NULL;
+lv_obj_t * ui_LowEgOilChange = NULL;
+lv_obj_t * ui_Roller1 = NULL;
 // event funtions
+void ui_event_Screen1(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+
+    if(event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_LEFT) {
+        lv_indev_wait_release(lv_indev_get_act());
+        _ui_screen_change(&ui_Screen2, LV_SCR_LOAD_ANIM_MOVE_LEFT, 400, 0, &ui_Screen2_screen_init);
+    }
+}
+
 void ui_event_ECOChange(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
@@ -54,6 +71,15 @@ void ui_event_Engine(lv_event_t * e)
     }
 }
 
+void ui_event_EngineChange(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+
+    if(event_code == LV_EVENT_CLICKED) {
+        _ui_state_modify(ui_Engine, LV_STATE_CHECKED, _UI_MODIFY_STATE_TOGGLE);
+    }
+}
+
 void ui_event_seat_belt(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
@@ -63,12 +89,30 @@ void ui_event_seat_belt(lv_event_t * e)
     }
 }
 
+void ui_event_BeltChange(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+
+    if(event_code == LV_EVENT_CLICKED) {
+        _ui_state_modify(ui_seat_belt, LV_STATE_CHECKED, _UI_MODIFY_STATE_TOGGLE);
+    }
+}
+
 void ui_event_Low_engine_oil(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
 
     if(event_code == LV_EVENT_CLICKED) {
         LowEngineOilIconBright(e);
+    }
+}
+
+void ui_event_LowEgOilChange(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+
+    if(event_code == LV_EVENT_CLICKED) {
+        _ui_state_modify(ui_Low_engine_oil, LV_STATE_CHECKED, _UI_MODIFY_STATE_TOGGLE);
     }
 }
 
@@ -191,6 +235,30 @@ void ui_Screen1_screen_init(void)
     lv_img_set_pivot(ui_KmPoint, 355, 66);
     lv_img_set_zoom(ui_KmPoint, 80);
 
+    ui_ODO = lv_label_create(ui_KmTable);
+    lv_obj_set_width(ui_ODO, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_ODO, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_ODO, -435);
+    lv_obj_set_y(ui_ODO, 530);
+    lv_obj_set_align(ui_ODO, LV_ALIGN_TOP_RIGHT);
+    lv_label_set_text(ui_ODO, "16863");
+    lv_obj_set_style_text_color(ui_ODO, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_ODO, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_align(ui_ODO, LV_TEXT_ALIGN_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_ODO, &ui_font_TIME, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_TRIP = lv_label_create(ui_KmTable);
+    lv_obj_set_width(ui_TRIP, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_TRIP, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_TRIP, -435);
+    lv_obj_set_y(ui_TRIP, 550);
+    lv_obj_set_align(ui_TRIP, LV_ALIGN_TOP_RIGHT);
+    lv_label_set_text(ui_TRIP, "136");
+    lv_obj_set_style_text_color(ui_TRIP, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_TRIP, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_align(ui_TRIP, LV_TEXT_ALIGN_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_TRIP, &ui_font_TIME, LV_PART_MAIN | LV_STATE_DEFAULT);
+
     ui_Tachometer = lv_img_create(ui_Container1);
     lv_img_set_src(ui_Tachometer, &ui_img_837428543);
     lv_obj_set_width(ui_Tachometer, LV_SIZE_CONTENT);   /// 918
@@ -213,6 +281,17 @@ void ui_Screen1_screen_init(void)
     lv_obj_clear_flag(ui_TMeterpoint, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_img_set_pivot(ui_TMeterpoint, 355, 66);
     lv_img_set_zoom(ui_TMeterpoint, 80);
+
+    ui_TIME = lv_label_create(ui_Tachometer);
+    lv_obj_set_width(ui_TIME, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_TIME, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_TIME, 0);
+    lv_obj_set_y(ui_TIME, 77);
+    lv_obj_set_align(ui_TIME, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_TIME, "00:00");
+    lv_obj_set_style_text_color(ui_TIME, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_TIME, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_TIME, &ui_font_TIME, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_DirectionContainer = lv_obj_create(ui_Container1);
     lv_obj_remove_style_all(ui_DirectionContainer);
@@ -282,6 +361,15 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_style_opa(ui_Engine, 50, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_opa(ui_Engine, 255, LV_PART_MAIN | LV_STATE_CHECKED);
 
+    ui_EngineChange = lv_btn_create(ui_Engine);
+    lv_obj_set_width(ui_EngineChange, 30);
+    lv_obj_set_height(ui_EngineChange, 30);
+    lv_obj_set_align(ui_EngineChange, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_EngineChange, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_clear_flag(ui_EngineChange, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_blend_mode(ui_EngineChange, LV_BLEND_MODE_SUBTRACTIVE, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_opa(ui_EngineChange, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
     ui_seat_belt = lv_img_create(ui_Screen1);
     lv_img_set_src(ui_seat_belt, &ui_img_424233258);
     lv_obj_set_width(ui_seat_belt, LV_SIZE_CONTENT);   /// 190
@@ -293,8 +381,16 @@ void ui_Screen1_screen_init(void)
     lv_obj_clear_flag(ui_seat_belt, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_img_set_zoom(ui_seat_belt, 80);
     lv_obj_set_style_opa(ui_seat_belt, 50, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_blend_mode(ui_seat_belt, LV_BLEND_MODE_SUBTRACTIVE, LV_PART_MAIN | LV_STATE_CHECKED);
-    lv_obj_set_style_opa(ui_seat_belt, 50, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_opa(ui_seat_belt, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+
+    ui_BeltChange = lv_btn_create(ui_seat_belt);
+    lv_obj_set_width(ui_BeltChange, 30);
+    lv_obj_set_height(ui_BeltChange, 30);
+    lv_obj_set_align(ui_BeltChange, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_BeltChange, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_clear_flag(ui_BeltChange, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_blend_mode(ui_BeltChange, LV_BLEND_MODE_SUBTRACTIVE, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_opa(ui_BeltChange, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Low_engine_oil = lv_img_create(ui_Screen1);
     lv_img_set_src(ui_Low_engine_oil, &ui_img_1357980260);
@@ -309,11 +405,44 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_style_opa(ui_Low_engine_oil, 50, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_opa(ui_Low_engine_oil, 255, LV_PART_MAIN | LV_STATE_CHECKED);
 
+    ui_LowEgOilChange = lv_btn_create(ui_Low_engine_oil);
+    lv_obj_set_width(ui_LowEgOilChange, 30);
+    lv_obj_set_height(ui_LowEgOilChange, 30);
+    lv_obj_set_align(ui_LowEgOilChange, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_LowEgOilChange, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_clear_flag(ui_LowEgOilChange, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_blend_mode(ui_LowEgOilChange, LV_BLEND_MODE_SUBTRACTIVE, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_opa(ui_LowEgOilChange, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Roller1 = lv_roller_create(ui_Screen1);
+    lv_roller_set_options(ui_Roller1, "运动模式\n经济模式\n舒适模式", LV_ROLLER_MODE_INFINITE);
+    lv_obj_set_height(ui_Roller1, 63);
+    lv_obj_set_width(ui_Roller1, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_x(ui_Roller1, 0);
+    lv_obj_set_y(ui_Roller1, 10);
+    lv_obj_set_align(ui_Roller1, LV_ALIGN_TOP_MID);
+    lv_obj_set_style_text_color(ui_Roller1, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Roller1, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_letter_space(ui_Roller1, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_line_space(ui_Roller1, 6, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Roller1, &ui_font_MiSans18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_Roller1, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_Roller1, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_Roller1, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui_Roller1, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    lv_obj_set_style_bg_color(ui_Roller1, lv_color_hex(0xFFFFFF), LV_PART_SELECTED | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_Roller1, 0, LV_PART_SELECTED | LV_STATE_DEFAULT);
+
     lv_obj_add_event_cb(ui_ECOChange, ui_event_ECOChange, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_HBChange, ui_event_HBChange, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_EngineChange, ui_event_EngineChange, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Engine, ui_event_Engine, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_BeltChange, ui_event_BeltChange, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_seat_belt, ui_event_seat_belt, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_LowEgOilChange, ui_event_LowEgOilChange, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Low_engine_oil, ui_event_Low_engine_oil, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_Screen1, ui_event_Screen1, LV_EVENT_ALL, NULL);
 
 }
 
@@ -333,15 +462,22 @@ void ui_Screen1_screen_destroy(void)
     ui_OilPoint = NULL;
     ui_KmTable = NULL;
     ui_KmPoint = NULL;
+    ui_ODO = NULL;
+    ui_TRIP = NULL;
     ui_Tachometer = NULL;
     ui_TMeterpoint = NULL;
+    ui_TIME = NULL;
     ui_DirectionContainer = NULL;
     ui_High_beam = NULL;
     ui_HBChange = NULL;
     ui_Left = NULL;
     ui_Right = NULL;
     ui_Engine = NULL;
+    ui_EngineChange = NULL;
     ui_seat_belt = NULL;
+    ui_BeltChange = NULL;
     ui_Low_engine_oil = NULL;
+    ui_LowEgOilChange = NULL;
+    ui_Roller1 = NULL;
 
 }

@@ -8,24 +8,15 @@
 
 void EngineIconBright(lv_event_t * e)
 {
-    lv_event_code_t event_code = lv_event_get_code(e);
-    if(event_code == LV_EVENT_CLICKED) {
-        _ui_state_modify(ui_Engine, LV_STATE_CHECKED, _UI_MODIFY_STATE_TOGGLE);
-    }
+
 }
 
 void SeatBeltIconBright(lv_event_t * e)
 {
-    lv_event_code_t event_code = lv_event_get_code(e);
-    if(event_code == LV_EVENT_CLICKED) {
-        _ui_state_modify(ui_seat_belt, LV_STATE_CHECKED, _UI_MODIFY_STATE_TOGGLE);
-    }
+
 }
 
 void LowEngineOilIconBright(lv_event_t * e)
 {
-    lv_event_code_t event_code = lv_event_get_code(e);
-    if(event_code == LV_EVENT_CLICKED) {
-        _ui_state_modify(ui_Low_engine_oil, LV_STATE_CHECKED, _UI_MODIFY_STATE_TOGGLE);
-    }
+
 }
