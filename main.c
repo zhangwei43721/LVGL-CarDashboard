@@ -73,6 +73,9 @@ int main(int argc, char **argv)
     // Screen2 静态数据
     init_screen2_static_data();
 
+    // 阶段三：数据驱动的 UI 定时刷新（100ms）
+    lv_timer_create(update_ui_from_state, 100, NULL);
+
     /* 主循环 */
     while(1) {
         handle_console_input();

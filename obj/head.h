@@ -14,6 +14,31 @@
 #include "lvgl/examples/lv_examples.h"
 #include "lvgl/lvgl.h"
 
+// --- 阶段三：车辆状态数据模型 ---
+typedef struct {
+    // --- 主要仪表数据 ---
+    int speed;            // 速度 (0-220 km/h)
+    int rpm;              // 转速 (0-8000 RPM)
+    int water_temp;       // 水温 (0-150 °C)
+    int fuel_level;       // 油量 (0-100 %)
+
+    // --- 轮胎数据 ---
+    int tire_pressure_fl; // 左前胎压 (kPa)
+    int tire_pressure_fr; // 右前胎压
+    int tire_pressure_bl; // 左后胎压
+    int tire_pressure_br; // 右后胎压
+
+    // --- 里程数据 ---
+    float total_mileage;  // ODO 总里程 (km)
+    float trip_mileage;   // TRIP 行程里程 (km)
+} VehicleState;
+
+// 全局状态单例
+extern VehicleState g_vehicle_state;
+
+// 根据 VehicleState 更新 UI 的渲染器（定时器回调）
+void update_ui_from_state(lv_timer_t *timer);
+
 void init_time_display(void);     // 时间显示函数
 void handle_console_input(void);  // 处理控制台输入的函数
 void init_phase2_features(void);   // 绑定 Roller 事件并同步 ECO

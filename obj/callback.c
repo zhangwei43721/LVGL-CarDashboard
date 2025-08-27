@@ -170,20 +170,91 @@ static void process_command(char* cmd) {
     set_light_state_by_checked(ui_Low_engine_oil, is_on);
   } else if (strcmp(target, "水温报警") == 0) {
     set_light_state_by_hidden(ui_TempWarning, is_on);
+  } else if (strcmp(target, "速度") == 0) {
+    char* endp = NULL;
+    long v = strtol(action, &endp, 10);
+    if (endp == action) {
+      printf("无效速度值: %s\n", action);
+      return;
+    }
+    if (v < 0) v = 0;
+    if (v > 220) v = 220;
+    g_vehicle_state.speed = (int)v;
+    printf("设置速度=%d km/h\n", (int)v);
+  } else if (strcmp(target, "转速") == 0) {
+    char* endp = NULL;
+    long v = strtol(action, &endp, 10);
+    if (endp == action) {
+      printf("无效转速值: %s\n", action);
+      return;
+    }
+    if (v < 0) v = 0;
+    if (v > 8000) v = 8000;
+    g_vehicle_state.rpm = (int)v;
+    printf("设置转速=%d RPM\n", (int)v);
+  } else if (strcmp(target, "水温") == 0) {
+    char* endp = NULL;
+    long v = strtol(action, &endp, 10);
+    if (endp == action) {
+      printf("无效水温值: %s\n", action);
+      return;
+    }
+    if (v < 0) v = 0;
+    if (v > 150) v = 150;
+    g_vehicle_state.water_temp = (int)v;
+    printf("设置水温=%d °C\n", (int)v);
+  } else if (strcmp(target, "油量") == 0) {
+    char* endp = NULL;
+    long v = strtol(action, &endp, 10);
+    if (endp == action) {
+      printf("无效油量值: %s\n", action);
+      return;
+    }
+    if (v < 0) v = 0;
+    if (v > 100) v = 100;
+    g_vehicle_state.fuel_level = (int)v;
+    printf("设置油量=%d %%\n", (int)v);
+  } else if (strcmp(target, "胎压") == 0) {
+    // 需要从整行解析: 胎压 <位置> <数值>
+    char pos[16];
+    int val = -1;
+    if (sscanf(cmd, "%*s %15s %d", pos, &val) != 2) {
+      printf("无效胎压命令, 用法: 胎压 <左前/右前/左后/右后> <kPa>\n");
+      return;
+    }
+    if (val < 0) val = 0;
+    if (val > 500) val = 500;  // 合理上限
+    if (strcmp(pos, "左前") == 0) {
+      g_vehicle_state.tire_pressure_fl = val;
+      printf("设置左前胎压=%d kPa\n", val);
+    } else if (strcmp(pos, "右前") == 0) {
+      g_vehicle_state.tire_pressure_fr = val;
+      printf("设置右前胎压=%d kPa\n", val);
+    } else if (strcmp(pos, "左后") == 0) {
+      g_vehicle_state.tire_pressure_bl = val;
+      printf("设置左后胎压=%d kPa\n", val);
+    } else if (strcmp(pos, "右后") == 0) {
+      g_vehicle_state.tire_pressure_br = val;
+      printf("设置右后胎压=%d kPa\n", val);
+    } else {
+      printf("未知位置: %s，应为 左前/右前/左后/右后\n", pos);
+      return;
+    }
   } else if (strcmp(target, "左转向") == 0) {
     control_manual_flashing(ui_Left, is_on, &left_turn_signal_timer);
   } else if (strcmp(target, "右转向") == 0) {
     control_manual_flashing(ui_Right, is_on, &right_turn_signal_timer);
   } else if (strncmp(target, "表", 3) == 0 || strncmp(target, "表", 2) == 0) {
+    // 阶段三：数据驱动。表命令不再直接操作 UI，而是反向映射更新 g_vehicle_state
     int gauge_index = -1;
     if (strcmp(target, "表一") == 0 || strcmp(target, "表1") == 0)
-      gauge_index = 1;
+      gauge_index = 1;  // 水温
     else if (strcmp(target, "表二") == 0 || strcmp(target, "表2") == 0)
-      gauge_index = 2;
+      gauge_index = 2;  // 速度
     else if (strcmp(target, "表三") == 0 || strcmp(target, "表3") == 0)
-      gauge_index = 3;
+      gauge_index = 3;  // 转速
     else if (strcmp(target, "表四") == 0 || strcmp(target, "表4") == 0)
-      gauge_index = 4;
+      gauge_index = 4;  // 油量
 
     if (gauge_index < 0) {
       printf("未知表目标: %s，应为 表一/表二/表三/表四 或 表1..表4\n", target);
@@ -191,68 +262,47 @@ static void process_command(char* cmd) {
     }
 
     char* endp = NULL;
-    long deg = strtol(action, &endp, 10);
+    long deg = strtol(action, &endp, 10);  // 输入单位：度
     if (endp == action) {
       printf("角度无效: %s，应输入整数角度(度)\n", action);
       return;
     }
 
-    /* 统一实现：按每个表的预设偏置与范围设置角度 */
-    /* 角度单位：LVGL 采用 0.1 度，故要乘以 10 */
-
-    lv_obj_t* needle = NULL;
-    int min_rel = 0; /* 相对旋转范围最小值(0.1度) */
-    int max_rel = 0; /* 相对旋转范围最大值(0.1度) */
-    int base = 0;    /* 初始偏置(0.1度) */
-
+    // 约束角度并反向映射到领域数据
     switch (gauge_index) {
-      case 1:
-        /* 表一：左侧小表-水温针 ui_TempPoint，对应 Waterpoint_Animation 0..900
-         */
-        needle = ui_TempPoint;
-        min_rel = 0;
-        max_rel = 900; /* 0..90 度 */
-        base = 0;      /* 未设置初始角度 */
+      case 1: {  // 水温：0..90度 -> 0..150°C
+        if (deg < 0) deg = 0;
+        if (deg > 90) deg = 90;
+        int water = (int)(deg * (150.0f / 90.0f) + 0.5f);
+        g_vehicle_state.water_temp = water;
+        printf("设置水温=%d°C (由角度%ld°反推)\n", water, deg);
         break;
-      case 2:
-        /* 表二：中间速度表 ui_KmPoint，对应 KmRotate_Animation 0..2450 */
-        needle = ui_KmPoint;
-        min_rel = 0;
-        max_rel = 2450; /* 0..245 度 */
-        base = 0;
+      }
+      case 2: {  // 速度：0..245度 -> 0..220 km/h
+        if (deg < 0) deg = 0;
+        if (deg > 245) deg = 245;
+        int speed = (int)(deg * (220.0f / 245.0f) + 0.5f);
+        g_vehicle_state.speed = speed;
+        printf("设置速度=%d km/h (由角度%ld°反推)\n", speed, deg);
         break;
-      case 3:
-        /* 表三：右侧转速表 ui_TMeterpoint，对应 PointRotate2_Animation 0..2430
-         */
-        needle = ui_TMeterpoint;
-        min_rel = 0;
-        max_rel = 2430; /* 0..243 度 */
-        base = 0;
+      }
+      case 3: {  // 转速：0..243度 -> 0..8000 rpm
+        if (deg < 0) deg = 0;
+        if (deg > 243) deg = 243;
+        int rpm = (int)(deg * (8000.0f / 243.0f) + 0.5f);
+        g_vehicle_state.rpm = rpm;
+        printf("设置转速=%d RPM (由角度%ld°反推)\n", rpm, deg);
         break;
-      case 4:
-        /* 表四：右侧小表-油量针 ui_OilPoint，对应 Oilpoint_Animation 900..1800
-         */
-        needle = ui_OilPoint;
-        min_rel = 0;
-        max_rel = 900;
-        base = 900; /* UI 里设置了 lv_img_set_angle(ui_OilPoint, 900) */
+      }
+      case 4: {  // 油量：0..90度(相对) -> 0..100%
+        if (deg < 0) deg = 0;
+        if (deg > 90) deg = 90;
+        int fuel = (int)(deg * (100.0f / 90.0f) + 0.5f);
+        g_vehicle_state.fuel_level = fuel;
+        printf("设置油量=%d%% (由角度%ld°反推)\n", fuel, deg);
         break;
+      }
     }
-
-    if (!needle) {
-      printf("该表针对象不存在，可能屏幕未初始化完成\n");
-      return;
-    }
-
-    /* 用户角度 -> 相对角度(0.1度) 并限制在范围内 */
-    long rel = deg * 10;
-    if (rel < min_rel) rel = min_rel;
-    if (rel > max_rel) rel = max_rel;
-    long abs_angle = base + rel;
-    // 动画过渡到目标角度，300ms 可按需调整
-    animate_img_angle_to(needle, (int16_t)abs_angle, 300);
-    printf("已设置(动画) 表%d 指针角度: 相对 %ld(0.1°), 绝对 %ld(0.1°)\n",
-           gauge_index, rel, abs_angle);
   } else {
     printf("未知目标: %s\n", target);
   }
