@@ -42,7 +42,7 @@ file(GLOB_RECURSE ALL_SOURCES
 )
 
 # --- 构建主程序 ---
-add_executable(${PROJECT_NAME} main.c mouse_cursor_icon.c ${ALL_SOURCES})
+add_executable(${PROJECT_NAME} main.c ${ALL_SOURCES})
 
 # --- 链接平台库 ---
 target_link_libraries(${PROJECT_NAME} PRIVATE ${PLATFORM_LIBS})

@@ -65,6 +65,8 @@ int main(int argc, char **argv)
     /* === 调用 UI 代码 === */
     // obj_pos1();
     ui_init();
+    // 点亮所有灯光，便于用户检查灯光是否损坏
+    init_all_lights_test();
     
     // 时间显示控件
     init_time_display();
@@ -173,11 +175,6 @@ static void hal_init(void)
     indev_drv_1.type = LV_INDEV_TYPE_POINTER;
     indev_drv_1.read_cb = evdev_read;
     lv_indev_t *mouse_indev = lv_indev_drv_register(&indev_drv_1);
-
-    LV_IMG_DECLARE(mouse_cursor_icon)
-    lv_obj_t * cursor_obj = lv_img_create(lv_scr_act());
-    lv_img_set_src(cursor_obj, &mouse_cursor_icon);
-    lv_indev_set_cursor(mouse_indev, cursor_obj);
 
 #endif
 }

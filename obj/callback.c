@@ -1,5 +1,9 @@
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <sys/select.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "../UI/ui.h"
 #include "head.h"
@@ -64,7 +68,6 @@ void init_time_display(void) {  // 初始化时间显示控件
 static lv_timer_t* left_turn_signal_timer = NULL;
 static lv_timer_t* right_turn_signal_timer = NULL;
 
-
 // 设置使用 "CHECKED" 状态来控制亮/灭的灯光
 // (适用于远光灯, ECO, 安全带, 发动机, 机油灯)
 static void set_light_state_by_checked(lv_obj_t* light_obj, bool state) {
@@ -85,7 +88,6 @@ static void set_light_state_by_hidden(lv_obj_t* light_obj, bool state) {
     lv_obj_add_flag(light_obj, LV_OBJ_FLAG_HIDDEN);
   }
 }
-
 
 // 创建一个定时器，用于产生闪烁效果
 static void manual_flash_cb(lv_timer_t* timer) {
@@ -119,32 +121,81 @@ static void control_manual_flashing(lv_obj_t* signal_icon, bool state,
   }
 }
 
+// 启动自检结束时关闭灯光的一次性回调
+static void startup_selftest_off_cb(lv_timer_t* timer) {
+  LV_UNUSED(timer);
+  // 关闭 CHECKED 控制的指示灯
+  set_light_state_by_checked(ui_High_beam, false);
+  set_light_state_by_checked(ui_ECO, false);
+  set_light_state_by_checked(ui_seat_belt, false);
+  set_light_state_by_checked(ui_Engine, false);
+  set_light_state_by_checked(ui_Low_engine_oil, false);
+  // 隐藏报警灯
+  set_light_state_by_hidden(ui_TempWarning, false);
+  // 熄灭转向灯图标
+  if (ui_Left)  lv_obj_set_style_opa(ui_Left,  LV_OPA_TRANSP, 0);
+  if (ui_Right) lv_obj_set_style_opa(ui_Right, LV_OPA_TRANSP, 0);
+  // 删除自身，确保仅执行一次
+  lv_timer_del(timer);
+}
+
+// 启动时点亮所有主要灯光，便于自检
+void init_all_lights_test(void) {
+  // 常亮指示类（使用 CHECKED）
+  set_light_state_by_checked(ui_High_beam, true);
+  set_light_state_by_checked(ui_ECO, true);
+  set_light_state_by_checked(ui_seat_belt, true);
+  set_light_state_by_checked(ui_Engine, true);
+  set_light_state_by_checked(ui_Low_engine_oil, true);
+  // 报警灯（使用隐藏/显示）
+  set_light_state_by_hidden(ui_TempWarning, true);
+  // 转向灯（直接点亮图标，不启用闪烁）
+  if (ui_Left) lv_obj_set_style_opa(ui_Left, LV_OPA_COVER, 0);
+  if (ui_Right) lv_obj_set_style_opa(ui_Right, LV_OPA_COVER, 0);
+  // 创建一次性定时器，短暂点亮后自动熄灭
+  lv_timer_t* once = lv_timer_create(startup_selftest_off_cb, 800, NULL);
+  LV_UNUSED(once);
+}
+
 // --- 指令解析函数 ---
 static void process_command(char* cmd) {
   char target[50];
-  char action[20];
+  char action[20] = {0};
 
   int items = sscanf(cmd, "%49s %19s", target, action);
+
+  // 简化：单词指令直接反转对应灯的状态
+  if (items == 1) {
+    if (strcmp(target, "左转") == 0) {
+      // 根据是否在闪烁来反转
+      bool turning_on = (left_turn_signal_timer == NULL);
+      control_manual_flashing(ui_Left, turning_on, &left_turn_signal_timer);
+      return;
+    } else if (strcmp(target, "右转") == 0) {
+      bool turning_on = (right_turn_signal_timer == NULL);
+      control_manual_flashing(ui_Right, turning_on, &right_turn_signal_timer);
+      return;
+    } else if (strcmp(target, "远光") == 0) {
+      if (ui_High_beam) {
+        bool now_on = lv_obj_has_state(ui_High_beam, LV_STATE_CHECKED);
+        set_light_state_by_checked(ui_High_beam, !now_on);
+      }
+      return;
+    } else if (strcmp(target, "安全带") == 0) {
+      if (ui_seat_belt) {
+        bool now_on = lv_obj_has_state(ui_seat_belt, LV_STATE_CHECKED);
+        set_light_state_by_checked(ui_seat_belt, !now_on);
+      }
+      return;
+    }
+  }
+
   if (items != 2) {
-    printf("无效指令, 格式应为: <目标> <动作> (例如: 远光灯 开)\n");
+    printf("无效指令。可输入：左转 / 右转 / 远光 / 安全带 \n");
     return;
   }
 
-  bool is_on = (strcmp(action, "开") == 0);
-
-  if (strcmp(target, "远光灯") == 0) {
-    set_light_state_by_checked(ui_High_beam, is_on);
-  } else if (strcmp(target, "eco") == 0) {
-    set_light_state_by_checked(ui_ECO, is_on);
-  } else if (strcmp(target, "安全带") == 0) {
-    set_light_state_by_checked(ui_seat_belt, is_on);
-  } else if (strcmp(target, "发动机") == 0) {
-    set_light_state_by_checked(ui_Engine, is_on);
-  } else if (strcmp(target, "机油") == 0) {
-    set_light_state_by_checked(ui_Low_engine_oil, is_on);
-  } else if (strcmp(target, "水温报警") == 0) {
-    set_light_state_by_hidden(ui_TempWarning, is_on);
-  } else if (strcmp(target, "速度") == 0) {
+  if (strcmp(target, "速度") == 0) {
     char* endp = NULL;
     long v = strtol(action, &endp, 10);
     if (endp == action) {
@@ -214,12 +265,7 @@ static void process_command(char* cmd) {
       printf("未知位置: %s，应为 左前/右前/左后/右后\n", pos);
       return;
     }
-  } else if (strcmp(target, "左转向") == 0) {
-    control_manual_flashing(ui_Left, is_on, &left_turn_signal_timer);
-  } else if (strcmp(target, "右转向") == 0) {
-    control_manual_flashing(ui_Right, is_on, &right_turn_signal_timer);
   } else if (strncmp(target, "表", 3) == 0 || strncmp(target, "表", 2) == 0) {
-    // 阶段三：数据驱动。表命令不再直接操作 UI，而是反向映射更新 g_vehicle_state
     int gauge_index = -1;
     if (strcmp(target, "表一") == 0 || strcmp(target, "表1") == 0)
       gauge_index = 1;  // 水温

@@ -3,7 +3,6 @@
 
 // 联动控制相关代码
 
-
 // 全局车辆状态
 VehicleState g_vehicle_state = {
     .speed = 20,                // 车速 (km/h)
@@ -15,7 +14,7 @@ VehicleState g_vehicle_state = {
     .tire_pressure_bl = 250,    // 左后轮胎压力 (kPa)
     .tire_pressure_br = 250,    // 右后轮胎压力 (kPa)
     .total_mileage = 16863.0f,  // 总里程 (公里)
-    .trip_mileage = 136.0f,     // 行程里程 (公里)
+    .trip_mileage = 0.0f,       // 本次行程里程 (公里)
 };
 
 // 将值限制在 [min_v, max_v] 范围内，整形
@@ -179,35 +178,17 @@ static void check_and_update_warnings(void) {
 void update_ui_from_state(lv_timer_t* timer) {
   uint32_t period = timer ? timer->period : 100;  // 兜底 100ms
   float dt_s = period / 1000.0f;
-
-  // 过温保护限转速
-  // 超过110°C时将转速限制到3000 RPM
-  if (g_vehicle_state.water_temp >= 110 && g_vehicle_state.rpm > 3000) {
-    g_vehicle_state.rpm = 3000;
-  }
-
-  // 水温动态（升温与冷却）
-  // - 转速越高升温越快：最大转速(8000)时 +0.08 °C/s
-  // - 车速越快升温越快：最大车速(220 km/h)时 +0.04 °C/s
-  // - 向目标温度(90°C)以 0.06 °C/s 进行冷却/回升
-  float heat_rpm = 0.08f * (g_vehicle_state.rpm / 8000.0f);
-  float heat_speed = 0.04f * (g_vehicle_state.speed / 220.0f);
-  float cool = 0.0f;
-  if (g_vehicle_state.water_temp > 90) {
-    cool = 0.06f;
-  } else if (g_vehicle_state.water_temp < 90) {
-    cool = -0.06f;
-  }
-  float new_temp =
-      g_vehicle_state.water_temp + (heat_rpm + heat_speed - cool) * dt_s;
-  g_vehicle_state.water_temp = clamp_i((int)(new_temp + 0.5f), 0, 150);
-
+  // 启动前2秒为自检阶段：不覆盖灯光状态
+  static uint32_t self_test_end_ms = 0;
+  if (self_test_end_ms == 0) self_test_end_ms = lv_tick_get() + 2000;
   // 1. 指针
   update_all_pointers_from_state(300);
   // 2. 胎压
   update_tire_pressure_display();
   // 3. 里程
   update_mileage_labels(period);
-  // 4. 告警
-  check_and_update_warnings();
+  // 4. 告警（自检阶段内跳过，以免覆盖全亮自检）
+  if (lv_tick_get() >= self_test_end_ms) {
+    check_and_update_warnings();
+  }
 }
