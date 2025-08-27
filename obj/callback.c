@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <time.h>
 
 #include "../UI/ui.h"
@@ -38,8 +39,9 @@ static void roller_value_changed_cb(lv_event_t* e) {
 void init_phase2_features(void) {
   // 绑定 Roller 的值改变事件
   if (ui_Roller1) {
-    lv_obj_add_event_cb(ui_Roller1, roller_value_changed_cb, LV_EVENT_VALUE_CHANGED, NULL);
-    // 根据当前初始选择同步 ECO 状态 
+    lv_obj_add_event_cb(ui_Roller1, roller_value_changed_cb,
+                        LV_EVENT_VALUE_CHANGED, NULL);
+    // 根据当前初始选择同步 ECO 状态
     roller_value_changed_cb(NULL);
   }
 }
@@ -59,6 +61,24 @@ void init_time_display(void) {  // 初始化时间显示控件
 
 static lv_timer_t* left_turn_signal_timer = NULL;
 static lv_timer_t* right_turn_signal_timer = NULL;
+
+// 平滑将图片角度动画到目标角度（单位：0.1度）
+static void animate_img_angle_to(lv_obj_t* img, int16_t to_angle,
+                                 uint32_t dur_ms) {
+  if (!img) return;
+  int16_t from_angle = 0;
+#if LVGL_VERSION_MAJOR >= 8
+  from_angle = lv_img_get_angle(img);
+#endif
+  lv_anim_t a;
+  lv_anim_init(&a);
+  lv_anim_set_var(&a, img);
+  lv_anim_set_exec_cb(&a, (lv_anim_exec_xcb_t)lv_img_set_angle);
+  lv_anim_set_time(&a, dur_ms);
+  lv_anim_set_values(&a, (int32_t)from_angle, (int32_t)to_angle);
+  lv_anim_set_path_cb(&a, lv_anim_path_ease_in_out);
+  lv_anim_start(&a);
+}
 
 // 设置使用 "CHECKED" 状态来控制亮/灭的灯光
 // (适用于远光灯, ECO, 安全带, 发动机, 机油灯)
@@ -130,7 +150,7 @@ static void process_command(char* cmd) {
   char target[50];
   char action[20];
 
-  int items = sscanf(cmd, "%s %s", target, action);
+  int items = sscanf(cmd, "%49s %19s", target, action);
   if (items != 2) {
     printf("无效指令, 格式应为: <目标> <动作> (例如: 远光灯 开)\n");
     return;
@@ -154,6 +174,85 @@ static void process_command(char* cmd) {
     control_manual_flashing(ui_Left, is_on, &left_turn_signal_timer);
   } else if (strcmp(target, "右转向") == 0) {
     control_manual_flashing(ui_Right, is_on, &right_turn_signal_timer);
+  } else if (strncmp(target, "表", 3) == 0 || strncmp(target, "表", 2) == 0) {
+    int gauge_index = -1;
+    if (strcmp(target, "表一") == 0 || strcmp(target, "表1") == 0)
+      gauge_index = 1;
+    else if (strcmp(target, "表二") == 0 || strcmp(target, "表2") == 0)
+      gauge_index = 2;
+    else if (strcmp(target, "表三") == 0 || strcmp(target, "表3") == 0)
+      gauge_index = 3;
+    else if (strcmp(target, "表四") == 0 || strcmp(target, "表4") == 0)
+      gauge_index = 4;
+
+    if (gauge_index < 0) {
+      printf("未知表目标: %s，应为 表一/表二/表三/表四 或 表1..表4\n", target);
+      return;
+    }
+
+    char* endp = NULL;
+    long deg = strtol(action, &endp, 10);
+    if (endp == action) {
+      printf("角度无效: %s，应输入整数角度(度)\n", action);
+      return;
+    }
+
+    /* 统一实现：按每个表的预设偏置与范围设置角度 */
+    /* 角度单位：LVGL 采用 0.1 度，故要乘以 10 */
+
+    lv_obj_t* needle = NULL;
+    int min_rel = 0; /* 相对旋转范围最小值(0.1度) */
+    int max_rel = 0; /* 相对旋转范围最大值(0.1度) */
+    int base = 0;    /* 初始偏置(0.1度) */
+
+    switch (gauge_index) {
+      case 1:
+        /* 表一：左侧小表-水温针 ui_TempPoint，对应 Waterpoint_Animation 0..900
+         */
+        needle = ui_TempPoint;
+        min_rel = 0;
+        max_rel = 900; /* 0..90 度 */
+        base = 0;      /* 未设置初始角度 */
+        break;
+      case 2:
+        /* 表二：中间速度表 ui_KmPoint，对应 KmRotate_Animation 0..2450 */
+        needle = ui_KmPoint;
+        min_rel = 0;
+        max_rel = 2450; /* 0..245 度 */
+        base = 0;
+        break;
+      case 3:
+        /* 表三：右侧转速表 ui_TMeterpoint，对应 PointRotate2_Animation 0..2430
+         */
+        needle = ui_TMeterpoint;
+        min_rel = 0;
+        max_rel = 2430; /* 0..243 度 */
+        base = 0;
+        break;
+      case 4:
+        /* 表四：右侧小表-油量针 ui_OilPoint，对应 Oilpoint_Animation 900..1800
+         */
+        needle = ui_OilPoint;
+        min_rel = 0;
+        max_rel = 900;
+        base = 900; /* UI 里设置了 lv_img_set_angle(ui_OilPoint, 900) */
+        break;
+    }
+
+    if (!needle) {
+      printf("该表针对象不存在，可能屏幕未初始化完成\n");
+      return;
+    }
+
+    /* 用户角度 -> 相对角度(0.1度) 并限制在范围内 */
+    long rel = deg * 10;
+    if (rel < min_rel) rel = min_rel;
+    if (rel > max_rel) rel = max_rel;
+    long abs_angle = base + rel;
+    // 动画过渡到目标角度，300ms 可按需调整
+    animate_img_angle_to(needle, (int16_t)abs_angle, 300);
+    printf("已设置(动画) 表%d 指针角度: 相对 %ld(0.1°), 绝对 %ld(0.1°)\n",
+           gauge_index, rel, abs_angle);
   } else {
     printf("未知目标: %s\n", target);
   }

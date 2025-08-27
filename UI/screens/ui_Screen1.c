@@ -205,13 +205,13 @@ void ui_Screen1_screen_init(void)
     lv_img_set_src(ui_OilPoint, &ui_img_170937940);
     lv_obj_set_width(ui_OilPoint, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_OilPoint, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_OilPoint, -110);
+    lv_obj_set_x(ui_OilPoint, -107);
     lv_obj_set_y(ui_OilPoint, 12);
     lv_obj_set_align(ui_OilPoint, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_OilPoint, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
     lv_obj_clear_flag(ui_OilPoint, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_img_set_pivot(ui_OilPoint, 250, 78);
-    lv_img_set_angle(ui_OilPoint, 1800);
+    lv_img_set_angle(ui_OilPoint, 900);
     lv_img_set_zoom(ui_OilPoint, 80);
 
     ui_KmTable = lv_img_create(ui_Container1);
