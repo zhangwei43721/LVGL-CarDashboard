@@ -62,23 +62,6 @@ void init_time_display(void) {  // 初始化时间显示控件
 static lv_timer_t* left_turn_signal_timer = NULL;
 static lv_timer_t* right_turn_signal_timer = NULL;
 
-// 平滑将图片角度动画到目标角度（单位：0.1度）
-static void animate_img_angle_to(lv_obj_t* img, int16_t to_angle,
-                                 uint32_t dur_ms) {
-  if (!img) return;
-  int16_t from_angle = 0;
-#if LVGL_VERSION_MAJOR >= 8
-  from_angle = lv_img_get_angle(img);
-#endif
-  lv_anim_t a;
-  lv_anim_init(&a);
-  lv_anim_set_var(&a, img);
-  lv_anim_set_exec_cb(&a, (lv_anim_exec_xcb_t)lv_img_set_angle);
-  lv_anim_set_time(&a, dur_ms);
-  lv_anim_set_values(&a, (int32_t)from_angle, (int32_t)to_angle);
-  lv_anim_set_path_cb(&a, lv_anim_path_ease_in_out);
-  lv_anim_start(&a);
-}
 
 // 设置使用 "CHECKED" 状态来控制亮/灭的灯光
 // (适用于远光灯, ECO, 安全带, 发动机, 机油灯)
@@ -101,17 +84,6 @@ static void set_light_state_by_hidden(lv_obj_t* light_obj, bool state) {
   }
 }
 
-// 切换图标的可见性以产生闪烁效果
-static void signal_flash_cb(lv_timer_t* timer) {
-  lv_obj_t* signal_icon = (lv_obj_t*)timer->user_data;
-  if (signal_icon) {
-    if (lv_obj_has_flag(signal_icon, LV_OBJ_FLAG_HIDDEN)) {
-      lv_obj_clear_flag(signal_icon, LV_OBJ_FLAG_HIDDEN);
-    } else {
-      lv_obj_add_flag(signal_icon, LV_OBJ_FLAG_HIDDEN);
-    }
-  }
-}
 
 // 创建一个定时器，用于产生闪烁效果
 static void manual_flash_cb(lv_timer_t* timer) {
@@ -299,7 +271,7 @@ static void process_command(char* cmd) {
         if (deg > 90) deg = 90;
         int fuel = (int)(deg * (100.0f / 90.0f) + 0.5f);
         g_vehicle_state.fuel_level = fuel;
-        printf("设置油量=%d%% (由角度%ld°反推)\n", fuel, deg);
+        printf("设置剩余油量=%d%% (由角度%ld°反推)\n", fuel, deg);
         break;
       }
     }
