@@ -4,6 +4,8 @@
 #include "../UI/ui.h"
 #include "head.h"
 
+// 用户控制相关代码
+
 // 更新时间的定时器回调函数
 static void update_time_timer_cb(lv_timer_t* timer) {
   // 获取当前时间
@@ -185,7 +187,7 @@ static void process_command(char* cmd) {
     if (v < 0) v = 0;
     if (v > 100) v = 100;
     g_vehicle_state.fuel_level = (int)v;
-    printf("设置油量=%d %%\n", (int)v);
+    printf("设置油量使用=%d %%\n", (int)v);
   } else if (strcmp(target, "胎压") == 0) {
     // 需要从整行解析: 胎压 <位置> <数值>
     char pos[16];
