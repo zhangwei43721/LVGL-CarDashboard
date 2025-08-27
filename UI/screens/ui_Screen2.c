@@ -61,6 +61,8 @@ void ui_Screen2_screen_init(void)
     lv_obj_set_style_text_color(ui_Label3, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Label3, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_Label3, &ui_font_MiSans20, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_Label3, lv_color_hex(0xC71616), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_opa(ui_Label3, 255, LV_PART_MAIN | LV_STATE_CHECKED);
 
     ui_TopRightPanel = lv_obj_create(ui_CarState);
     lv_obj_set_width(ui_TopRightPanel, 220);
