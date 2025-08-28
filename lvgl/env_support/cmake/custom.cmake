@@ -21,8 +21,8 @@ if(LV_BUILD_DEMOS)
     file(GLOB_RECURSE DEMO_SOURCES ${LVGL_ROOT_DIR}/demos/*.c)
 endif()
 
-# add_library(lvgl STATIC ${SOURCES})
-add_library(lvgl SHARED ${SOURCES})
+add_library(lvgl STATIC ${SOURCES})
+# add_library(lvgl SHARED ${SOURCES})
 add_library(lvgl::lvgl ALIAS lvgl)
 
 if(LV_BUILD_EXAMPLES)

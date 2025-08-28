@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.12.4)
 project(lv_drivers HOMEPAGE_URL https://github.com/lvgl/lv_drivers/)
 
 file(GLOB_RECURSE SOURCES ./*.c)
-# add_library(lv_drivers STATIC ${SOURCES})
-add_library(lv_drivers SHARED ${SOURCES})
+add_library(lv_drivers STATIC ${SOURCES})
+# add_library(lv_drivers SHARED ${SOURCES})
 add_library(lvgl_drivers ALIAS lv_drivers)
 add_library(lvgl::drivers ALIAS lv_drivers)
 
