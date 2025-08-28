@@ -92,49 +92,44 @@ static void update_all_pointers_from_state(uint32_t anim_ms) {
     animate_img_angle_to(ui_OilPoint, (int16_t)ang_abs, anim_ms);
   }
 }
+
+// 更新单个轮胎显示的辅助函数
+static void update_single_tire_display(lv_obj_t* label, int pressure) {
+  if (!label) return;
+
+  char buf[32];
+  snprintf(buf, sizeof(buf), "%dkPa", pressure);
+  lv_label_set_text(label, buf);
+
+  bool is_warning =
+      (pressure < TIRE_PRESSURE_MIN_OK || pressure > TIRE_PRESSURE_MAX_OK);
+  lv_color_t color =
+      is_warning ? lv_color_hex(0xC71616) : lv_color_hex(0xFFFFFF);
+  lv_obj_set_style_text_color(label, color, LV_PART_MAIN | LV_STATE_DEFAULT);
+}
+
 // 更新所有胎压显示
 static void update_tire_pressure_display(void) {
-  if (ui_Label3) {
-    char buf[32];
-    snprintf(buf, sizeof(buf), "%dkPa", g_vehicle_state.tire_pressure_fl);
-    lv_label_set_text(ui_Label3, buf);
-    bool warn = (g_vehicle_state.tire_pressure_fl < 180 ||
-                 g_vehicle_state.tire_pressure_fl > 280);
-    lv_obj_set_style_text_color(
-        ui_Label3, warn ? lv_color_hex(0xC71616) : lv_color_hex(0xFFFFFF),
-        LV_PART_MAIN | LV_STATE_DEFAULT);
-  }
-  if (ui_Label1) {
-    char buf[32];
-    snprintf(buf, sizeof(buf), "%dkPa", g_vehicle_state.tire_pressure_fr);
-    lv_label_set_text(ui_Label1, buf);
-    bool warn = (g_vehicle_state.tire_pressure_fr < 180 ||
-                 g_vehicle_state.tire_pressure_fr > 280);
-    lv_obj_set_style_text_color(
-        ui_Label1, warn ? lv_color_hex(0xC71616) : lv_color_hex(0xFFFFFF),
-        LV_PART_MAIN | LV_STATE_DEFAULT);
-  }
-  if (ui_Label4) {
-    char buf[32];
-    snprintf(buf, sizeof(buf), "%dkPa", g_vehicle_state.tire_pressure_bl);
-    lv_label_set_text(ui_Label4, buf);
-    bool warn = (g_vehicle_state.tire_pressure_bl < 180 ||
-                 g_vehicle_state.tire_pressure_bl > 280);
-    lv_obj_set_style_text_color(
-        ui_Label4, warn ? lv_color_hex(0xC71616) : lv_color_hex(0xFFFFFF),
-        LV_PART_MAIN | LV_STATE_DEFAULT);
-  }
-  if (ui_Label5) {
-    char buf[32];
-    snprintf(buf, sizeof(buf), "%dkPa", g_vehicle_state.tire_pressure_br);
-    lv_label_set_text(ui_Label5, buf);
-    bool warn = (g_vehicle_state.tire_pressure_br < 180 ||
-                 g_vehicle_state.tire_pressure_br > 280);
-    lv_obj_set_style_text_color(
-        ui_Label5, warn ? lv_color_hex(0xC71616) : lv_color_hex(0xFFFFFF),
-        LV_PART_MAIN | LV_STATE_DEFAULT);
-  }
+  update_single_tire_display(ui_Label3, g_vehicle_state.tire_pressure_fl);
+  update_single_tire_display(ui_Label1, g_vehicle_state.tire_pressure_fr);
+  update_single_tire_display(ui_Label4, g_vehicle_state.tire_pressure_bl);
+  update_single_tire_display(ui_Label5, g_vehicle_state.tire_pressure_br);
 }
+
+// 创建一个通用的解析和设置函数
+bool parse_and_set_state_value(const char* str_val, int min, int max,
+                               int* target_state, const char* name) {
+  char* endp = NULL;
+  long v = strtol(str_val, &endp, 10);
+  if (endp == str_val || *endp != '\0') {
+    printf("无效数值: %s\n", str_val);
+    return false;
+  }
+  *target_state = clamp_i((int)v, min, max);  // 使用已有的 clamp_i 函数
+  printf("设置%s=%d\n", name, *target_state);
+  return true;
+}
+
 // 更新里程显示
 static void update_mileage_labels(uint32_t period_ms) {
   // 速度 km/h -> 增量 km： v * (period_ms/3600000)
@@ -161,14 +156,14 @@ static void update_mileage_labels(uint32_t period_ms) {
 static void check_and_update_warnings(void) {
   // 水温报警
   if (ui_TempWarning) {
-    if (g_vehicle_state.water_temp > 100)
+    if (g_vehicle_state.water_temp > WATER_TEMP_WARN_THRESHOLD)
       lv_obj_clear_flag(ui_TempWarning, LV_OBJ_FLAG_HIDDEN);
     else
       lv_obj_add_flag(ui_TempWarning, LV_OBJ_FLAG_HIDDEN);
   }
   // 低油量灯
   if (ui_Low_engine_oil) {
-    if (g_vehicle_state.fuel_level < 10)
+    if (g_vehicle_state.fuel_level < FUEL_LEVEL_LOW_THRESHOLD)
       lv_obj_add_state(ui_Low_engine_oil, LV_STATE_CHECKED);
     else
       lv_obj_clear_state(ui_Low_engine_oil, LV_STATE_CHECKED);

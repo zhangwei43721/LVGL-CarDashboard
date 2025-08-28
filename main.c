@@ -71,7 +71,7 @@ int main(int argc, char **argv)
     // 时间显示控件
     init_time_display();
     // Roller 联动 ECO 
-    init_phase2_features();
+    init_roller_event_handler();
 
     // 数据驱动的 UI 定时刷新（100ms）
     lv_timer_create(update_ui_from_state, 100, NULL);

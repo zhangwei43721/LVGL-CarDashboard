@@ -14,6 +14,12 @@
 #include "lvgl/examples/lv_examples.h"
 #include "lvgl/lvgl.h"
 
+// --- 常量定义 ---
+#define WATER_TEMP_WARN_THRESHOLD 100
+#define FUEL_LEVEL_LOW_THRESHOLD 10
+#define TIRE_PRESSURE_MIN_OK 180
+#define TIRE_PRESSURE_MAX_OK 280
+
 // --- 车辆状态数据模型 ---
 typedef struct {
   // --- 主要仪表数据 ---
@@ -39,9 +45,12 @@ extern VehicleState g_vehicle_state;
 // 根据 VehicleState 更新 UI 的渲染器（定时器回调）
 void update_ui_from_state(lv_timer_t *timer);
 
+// 解析并设置状态值的函数
+bool parse_and_set_state_value(const char* str_val, int min, int max, int* target_state, const char* name);
+
 void init_time_display(void);         // 时间显示函数
 void handle_console_input(void);      // 处理控制台输入的函数
-void init_phase2_features(void);      // 绑定 Roller 事件并同步 ECO
+void init_roller_event_handler(void); // 绑定 Roller 事件并同步 ECO
 void init_all_lights_test(void);      // 启动自检：点亮所有灯光
 
 lv_anim_t *Leftflash_Animation(lv_obj_t *TargetObject, int delay);  // 左转向灯动画

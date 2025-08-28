@@ -35,7 +35,7 @@ static void roller_value_changed_cb(lv_event_t* e) {
   }
 }
 // 绑定 Roller 的值改变事件
-void init_phase2_features(void) {
+void init_roller_event_handler(void) {
   if (ui_Roller1) {
     lv_obj_add_event_cb(ui_Roller1, roller_value_changed_cb,
                         LV_EVENT_VALUE_CHANGED, NULL);
@@ -62,6 +62,14 @@ static void set_light_state_by_checked(lv_obj_t* light_obj, bool state) {
   }
 }
 
+// 直接切换 CHECKED 状态
+static void toggle_light_by_checked(lv_obj_t* obj) {
+  if (!obj) return;
+  // 检查当前状态并切换
+  bool now_on = lv_obj_has_state(obj, LV_STATE_CHECKED);
+  set_light_state_by_checked(obj, !now_on);
+}
+
 // 通过显示/隐藏来控制报警灯 (用于水温报警)
 static void set_light_state_by_hidden(lv_obj_t* light_obj, bool state) {
   if (light_obj == NULL) return;
@@ -70,6 +78,23 @@ static void set_light_state_by_hidden(lv_obj_t* light_obj, bool state) {
   } else {
     lv_obj_add_flag(light_obj, LV_OBJ_FLAG_HIDDEN);
   }
+}
+
+// 创建一个统一的灯光控制函数
+static void set_all_lights_state(bool state) {
+  // 常亮指示类
+  set_light_state_by_checked(ui_High_beam, state);
+  set_light_state_by_checked(ui_ECO, state);
+  set_light_state_by_checked(ui_seat_belt, state);
+  set_light_state_by_checked(ui_Engine, state);
+  set_light_state_by_checked(ui_Low_engine_oil, state);
+
+  // 报警灯
+  set_light_state_by_hidden(ui_TempWarning, state);
+
+  // 转向灯 (自检时只亮/灭，不闪烁)
+  lv_obj_set_style_opa(ui_Left, state ? LV_OPA_COVER : 50, 0);
+  lv_obj_set_style_opa(ui_Right, state ? LV_OPA_COVER : 50, 0);
 }
 
 // 创建一个定时器，用于产生闪烁效果
@@ -106,38 +131,15 @@ static void control_manual_flashing(lv_obj_t* signal_icon, bool state,
 
 // 启动自检结束时关闭灯光的一次性回调
 static void startup_selftest_off_cb(lv_timer_t* timer) {
-  LV_UNUSED(timer);
-  // 关闭 CHECKED 控制的指示灯
-  set_light_state_by_checked(ui_High_beam, false);
-  set_light_state_by_checked(ui_ECO, false);
-  set_light_state_by_checked(ui_seat_belt, false);
-  set_light_state_by_checked(ui_Engine, false);
-  set_light_state_by_checked(ui_Low_engine_oil, false);
-  // 隐藏报警灯
-  set_light_state_by_hidden(ui_TempWarning, false);
-  // 熄灭转向灯图标
-  if (ui_Left) lv_obj_set_style_opa(ui_Left, LV_OPA_TRANSP, 0);
-  if (ui_Right) lv_obj_set_style_opa(ui_Right, LV_OPA_TRANSP, 0);
-  // 删除自身，确保仅执行一次
-  lv_timer_del(timer);
+  set_all_lights_state(false);
+  lv_timer_del(timer);  // 删除自身
 }
 
 // 启动时点亮所有主要灯光，便于自检
 void init_all_lights_test(void) {
-  // 常亮指示类（使用 CHECKED）
-  set_light_state_by_checked(ui_High_beam, true);
-  set_light_state_by_checked(ui_ECO, true);
-  set_light_state_by_checked(ui_seat_belt, true);
-  set_light_state_by_checked(ui_Engine, true);
-  set_light_state_by_checked(ui_Low_engine_oil, true);
-  // 报警灯（使用隐藏/显示）
-  set_light_state_by_hidden(ui_TempWarning, true);
-  // 转向灯（直接点亮图标，不启用闪烁）
-  if (ui_Left) lv_obj_set_style_opa(ui_Left, LV_OPA_COVER, 0);
-  if (ui_Right) lv_obj_set_style_opa(ui_Right, LV_OPA_COVER, 0);
-  // 创建一次性定时器，短暂点亮后自动熄灭
-  lv_timer_t* once = lv_timer_create(startup_selftest_off_cb, 800, NULL);
-  LV_UNUSED(once);
+  set_all_lights_state(true);
+  // 2秒后自动关闭所有灯
+  lv_timer_create(startup_selftest_off_cb, 2000, NULL);
 }
 
 // --- 指令解析函数 ---
@@ -146,8 +148,6 @@ static void process_command(char* cmd) {
   char action[20] = {0};
 
   int items = sscanf(cmd, "%49s %19s", target, action);
-
-  // 简化：单词指令直接反转对应灯的状态
   if (items == 1) {
     if (strcmp(target, "左转") == 0) {
       // 根据是否在闪烁来反转
@@ -165,28 +165,19 @@ static void process_command(char* cmd) {
       control_manual_flashing(ui_Right, turning_on, &right_turn_signal_timer);
       return;
     } else if (strcmp(target, "远光") == 0) {
-      if (ui_High_beam) {
-        bool now_on = lv_obj_has_state(ui_High_beam, LV_STATE_CHECKED);
-        set_light_state_by_checked(ui_High_beam, !now_on);
-      }
+      toggle_light_by_checked(ui_High_beam);
       return;
     } else if (strcmp(target, "近光") == 0) {
-      if (ui_Low_beam) {
-        bool now_on = lv_obj_has_state(ui_Low_beam, LV_STATE_CHECKED);
-        set_light_state_by_checked(ui_Low_beam, !now_on);
-      }
+      toggle_light_by_checked(ui_Low_beam);
       return;
     } else if (strcmp(target, "安全带") == 0) {
-      if (ui_seat_belt) {
-        bool now_on = lv_obj_has_state(ui_seat_belt, LV_STATE_CHECKED);
-        set_light_state_by_checked(ui_seat_belt, !now_on);
-      }
+      toggle_light_by_checked(ui_seat_belt);
       return;
     }
   }
 
   if (items != 2) {
-    printf("无效指令！ 可输入：左转 / 右转 / 远光 / 近光 / 安全带 /胎压 \n");
+    printf("无效指令！ 可输入：左转 / 右转 / 远光 / 近光 / 安全带 / 胎压\n");
     return;
   }
 
@@ -195,49 +186,15 @@ static void process_command(char* cmd) {
     control_manual_flashing(ui_Left, is_on, &left_turn_signal_timer);
     control_manual_flashing(ui_Right, is_on, &right_turn_signal_timer);
   } else if (strcmp(target, "速度") == 0) {
-    char* endp = NULL;
-    long v = strtol(action, &endp, 10);
-    if (endp == action) {
-      printf("无效速度值: %s\n", action);
-      return;
-    }
-    if (v < 0) v = 0;
-    if (v > 220) v = 220;
-    g_vehicle_state.speed = (int)v;
-    printf("设置速度=%d km/h\n", (int)v);
+    parse_and_set_state_value(action, 0, 220, &g_vehicle_state.speed, "速度");
   } else if (strcmp(target, "转速") == 0) {
-    char* endp = NULL;
-    long v = strtol(action, &endp, 10);
-    if (endp == action) {
-      printf("无效转速值: %s\n", action);
-      return;
-    }
-    if (v < 0) v = 0;
-    if (v > 8000) v = 8000;
-    g_vehicle_state.rpm = (int)v;
-    printf("设置转速=%d RPM\n", (int)v);
+    parse_and_set_state_value(action, 0, 8000, &g_vehicle_state.rpm, "转速");
   } else if (strcmp(target, "水温") == 0) {
-    char* endp = NULL;
-    long v = strtol(action, &endp, 10);
-    if (endp == action) {
-      printf("无效水温值: %s\n", action);
-      return;
-    }
-    if (v < 0) v = 0;
-    if (v > 150) v = 150;
-    g_vehicle_state.water_temp = (int)v;
-    printf("设置水温=%d °C\n", (int)v);
+    parse_and_set_state_value(action, 0, 150, &g_vehicle_state.water_temp,
+                              "水温");
   } else if (strcmp(target, "油量") == 0) {
-    char* endp = NULL;
-    long v = strtol(action, &endp, 10);
-    if (endp == action) {
-      printf("无效油量值: %s\n", action);
-      return;
-    }
-    if (v < 0) v = 0;
-    if (v > 100) v = 100;
-    g_vehicle_state.fuel_level = (int)v;
-    printf("设置油量使用=%d %%\n", (int)v);
+    parse_and_set_state_value(action, 0, 100, &g_vehicle_state.fuel_level,
+                              "油量");
   } else if (strcmp(target, "胎压") == 0) {
     // 需要从整行解析: 胎压 <位置> <数值>
     char pos[16];
@@ -263,64 +220,6 @@ static void process_command(char* cmd) {
     } else {
       printf("未知位置: %s，应为 左前/右前/左后/右后\n", pos);
       return;
-    }
-  } else if (strncmp(target, "表", 3) == 0 || strncmp(target, "表", 2) == 0) {
-    int gauge_index = -1;
-    if (strcmp(target, "表一") == 0 || strcmp(target, "表1") == 0)
-      gauge_index = 1;  // 水温
-    else if (strcmp(target, "表二") == 0 || strcmp(target, "表2") == 0)
-      gauge_index = 2;  // 速度
-    else if (strcmp(target, "表三") == 0 || strcmp(target, "表3") == 0)
-      gauge_index = 3;  // 转速
-    else if (strcmp(target, "表四") == 0 || strcmp(target, "表4") == 0)
-      gauge_index = 4;  // 油量
-
-    if (gauge_index < 0) {
-      printf("未知表目标: %s，应为 表一/表二/表三/表四 或 表1..表4\n", target);
-      return;
-    }
-
-    char* endp = NULL;
-    long deg = strtol(action, &endp, 10);  // 输入单位：度
-    if (endp == action) {
-      printf("角度无效: %s，应输入整数角度(度)\n", action);
-      return;
-    }
-
-    // 约束角度并反向映射到领域数据
-    switch (gauge_index) {
-      case 1: {  // 水温：0..90度 -> 0..150°C
-        if (deg < 0) deg = 0;
-        if (deg > 90) deg = 90;
-        int water = (int)(deg * (150.0f / 90.0f) + 0.5f);
-        g_vehicle_state.water_temp = water;
-        printf("设置水温=%d°C (由角度%ld°反推)\n", water, deg);
-        break;
-      }
-      case 2: {  // 速度：0..245度 -> 0..220 km/h
-        if (deg < 0) deg = 0;
-        if (deg > 245) deg = 245;
-        int speed = (int)(deg * (220.0f / 245.0f) + 0.5f);
-        g_vehicle_state.speed = speed;
-        printf("设置速度=%d km/h (由角度%ld°反推)\n", speed, deg);
-        break;
-      }
-      case 3: {  // 转速：0..243度 -> 0..8000 rpm
-        if (deg < 0) deg = 0;
-        if (deg > 243) deg = 243;
-        int rpm = (int)(deg * (8000.0f / 243.0f) + 0.5f);
-        g_vehicle_state.rpm = rpm;
-        printf("设置转速=%d RPM (由角度%ld°反推)\n", rpm, deg);
-        break;
-      }
-      case 4: {  // 油量：0..90度(相对) -> 0..100%
-        if (deg < 0) deg = 0;
-        if (deg > 90) deg = 90;
-        int fuel = (int)(deg * (100.0f / 90.0f) + 0.5f);
-        g_vehicle_state.fuel_level = fuel;
-        printf("设置剩余油量=%d%% (由角度%ld°反推)\n", fuel, deg);
-        break;
-      }
     }
   } else {
     printf("未知目标: %s\n", target);
