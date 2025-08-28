@@ -49,52 +49,37 @@ static void animate_img_angle_to(lv_obj_t* img, int16_t to_angle,
 }
 
 // 值到角度的映射（返回 0.1度）
-// 速度表角度映射
-static int value_to_angle_speed(int speed_kmh) {  // 0..220 -> 0..2450
-  speed_kmh = clamp_i(speed_kmh, 0, 220);
-  return (int)((2450.0f / 220.0f) * speed_kmh);
+// 通用的映射函数，取代之前所有的 value_to_angle_* 函数
+static int map_value_to_angle(int value, int val_min, int val_max,
+                              int angle_min, int angle_max) {
+  // 防止除以零
+  if (val_max == val_min) return angle_min;
+  // 使用浮点数进行精确计算
+  float ratio = (float)(value - val_min) / (val_max - val_min);
+  int angle = angle_min + (int)(ratio * (angle_max - angle_min));
+  // 确保结果在角度范围内
+  return clamp_i(angle, angle_min, angle_max);
 }
-// 转速角度映射
-static int value_to_angle_rpm(int rpm) {  // 0..8000 -> 0..2430
-  rpm = clamp_i(rpm, 0, 8000);
-  return (int)((2430.0f / 8000.0f) * rpm);
-}
-// 水温角度映射
-static int value_to_angle_water(int temp_c) {  // 0..150 -> 0..900
-  temp_c = clamp_i(temp_c, 0, 150);
-  return (int)((900.0f / 150.0f) * temp_c);
-}
-// 油量角度映射
-static int value_to_angle_fuel(int percent) {  // 0..100 -> base(900)+0..900
-  percent = clamp_i(percent, 0, 100);
-  return 900 + (int)((900.0f / 100.0f) * percent);
-}
+
 // 从状态结构体更新所有指针的角度
 static void update_all_pointers_from_state(uint32_t anim_ms) {
-  // 速度表
-  if (ui_KmPoint) {
-    int ang = value_to_angle_speed(g_vehicle_state.speed);
-    animate_img_angle_to(ui_KmPoint, (int16_t)ang, anim_ms);
-  }
-  // 转速表
-  if (ui_TMeterpoint) {
-    int ang = value_to_angle_rpm(g_vehicle_state.rpm);
-    animate_img_angle_to(ui_TMeterpoint, (int16_t)ang, anim_ms);
-  }
-  // 水温
-  if (ui_TempPoint) {
-    int ang_rel = value_to_angle_water(g_vehicle_state.water_temp);  // 0..900
-    animate_img_angle_to(ui_TempPoint, (int16_t)ang_rel, anim_ms);
-  }
-  // 油量（带基准）
-  if (ui_OilPoint) {
-    int ang_abs = value_to_angle_fuel(g_vehicle_state.fuel_level);
-    animate_img_angle_to(ui_OilPoint, (int16_t)ang_abs, anim_ms);
-  }
+  animate_img_angle_to(  // 速度表
+      ui_KmPoint, map_value_to_angle(g_vehicle_state.speed, 0, 220, 0, 2450),
+      anim_ms);
+  animate_img_angle_to(  // 转速表
+      ui_TMeterpoint, map_value_to_angle(g_vehicle_state.rpm, 0, 8000, 0, 2430),
+      anim_ms);
+  animate_img_angle_to(  // 水温
+      ui_TempPoint,
+      map_value_to_angle(g_vehicle_state.water_temp, 0, 150, 0, 900), anim_ms);
+  animate_img_angle_to(  // 油量 (注意油量指针有900度的基准偏移)
+      ui_OilPoint,
+      map_value_to_angle(g_vehicle_state.fuel_level, 0, 100, 900, 1800),
+      anim_ms);
 }
 
 // 更新单个轮胎显示的辅助函数
-static void update_single_tire_display(lv_obj_t* label, int pressure) {
+static void update_a_tire_display(lv_obj_t* label, int pressure) {
   if (!label) return;
 
   char buf[32];
@@ -110,10 +95,10 @@ static void update_single_tire_display(lv_obj_t* label, int pressure) {
 
 // 更新所有胎压显示
 static void update_tire_pressure_display(void) {
-  update_single_tire_display(ui_Label3, g_vehicle_state.tire_pressure_fl);
-  update_single_tire_display(ui_Label1, g_vehicle_state.tire_pressure_fr);
-  update_single_tire_display(ui_Label4, g_vehicle_state.tire_pressure_bl);
-  update_single_tire_display(ui_Label5, g_vehicle_state.tire_pressure_br);
+  update_a_tire_display(ui_Label3, g_vehicle_state.tire_pressure_fl);
+  update_a_tire_display(ui_Label1, g_vehicle_state.tire_pressure_fr);
+  update_a_tire_display(ui_Label4, g_vehicle_state.tire_pressure_bl);
+  update_a_tire_display(ui_Label5, g_vehicle_state.tire_pressure_br);
 }
 
 // 创建一个通用的解析和设置函数
@@ -156,14 +141,14 @@ static void update_mileage_labels(uint32_t period_ms) {
 static void check_and_update_warnings(void) {
   // 水温报警
   if (ui_TempWarning) {
-    if (g_vehicle_state.water_temp > WATER_TEMP_WARN_THRESHOLD)
+    if (g_vehicle_state.water_temp > WATER_TEMP_WARN)
       lv_obj_clear_flag(ui_TempWarning, LV_OBJ_FLAG_HIDDEN);
     else
       lv_obj_add_flag(ui_TempWarning, LV_OBJ_FLAG_HIDDEN);
   }
   // 低油量灯
   if (ui_Low_engine_oil) {
-    if (g_vehicle_state.fuel_level < FUEL_LEVEL_LOW_THRESHOLD)
+    if (g_vehicle_state.fuel_level < FUEL_LOW)
       lv_obj_add_state(ui_Low_engine_oil, LV_STATE_CHECKED);
     else
       lv_obj_clear_state(ui_Low_engine_oil, LV_STATE_CHECKED);
@@ -176,13 +161,10 @@ void update_ui_from_state(lv_timer_t* timer) {
   // 启动前2秒为自检阶段：不覆盖灯光状态
   static uint32_t self_test_end_ms = 0;
   if (self_test_end_ms == 0) self_test_end_ms = lv_tick_get() + 2000;
-  // 1. 指针
-  update_all_pointers_from_state(300);
-  // 2. 胎压
-  update_tire_pressure_display();
-  // 3. 里程
-  update_mileage_labels(period);
-  // 4. 告警（自检阶段内跳过，以免覆盖全亮自检）
+  update_all_pointers_from_state(300);  // 指针
+  update_tire_pressure_display();       // 胎压
+  update_mileage_labels(period);        // 里程
+  // 告警（自检阶段内跳过，以免覆盖全亮自检）
   if (lv_tick_get() >= self_test_end_ms) {
     check_and_update_warnings();
   }

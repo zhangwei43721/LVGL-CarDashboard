@@ -177,7 +177,9 @@ static void process_command(char* cmd) {
   }
 
   if (items != 2) {
-    printf("无效指令！ 可输入：左转 / 右转 / 远光 / 近光 / 安全带 / 胎压\n");
+    printf(
+        "无效指令！ 可输入：左转/右转/远光/近光/安全带\n"
+        "\t\t或 胎压 <左前/右前/左后/右后> <kPa>\n");
     return;
   }
 
@@ -217,9 +219,6 @@ static void process_command(char* cmd) {
     } else if (strcmp(pos, "右后") == 0) {
       g_vehicle_state.tire_pressure_br = val;
       printf("设置右后胎压=%d kPa\n", val);
-    } else {
-      printf("未知位置: %s，应为 左前/右前/左后/右后\n", pos);
-      return;
     }
   } else {
     printf("未知目标: %s\n", target);
