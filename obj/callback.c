@@ -12,19 +12,13 @@
 
 // 更新时间的定时器回调函数
 static void update_time_timer_cb(lv_timer_t* timer) {
-  // 获取当前时间
   time_t rawtime;
   struct tm* timeinfo;
-
-  time(&rawtime);
+  time(&rawtime);  // 获取当前时间
   timeinfo = localtime(&rawtime);
-
-  // 格式化时间字符串
-  static char time_str[20];
+  static char time_str[20];  // 格式化时间字符串
   strftime(time_str, sizeof(time_str), "%H:%M", timeinfo);
-
-  // 更新标签文本
-  if (ui_TIME != NULL) {
+  if (ui_TIME != NULL) {  // 更新标签文本
     lv_label_set_text(ui_TIME, time_str);
   }
 }
@@ -35,29 +29,18 @@ static void roller_value_changed_cb(lv_event_t* e) {
   if (!ui_Roller1 || !ui_ECO) return;
   uint16_t sel = lv_roller_get_selected(ui_Roller1);
   if ((sel % 3) == 1) {
-    /* 经济模式 */
     lv_obj_add_state(ui_ECO, LV_STATE_CHECKED);
   } else {
     lv_obj_clear_state(ui_ECO, LV_STATE_CHECKED);
   }
 }
-
+// 绑定 Roller 的值改变事件
 void init_phase2_features(void) {
-  // 绑定 Roller 的值改变事件
   if (ui_Roller1) {
     lv_obj_add_event_cb(ui_Roller1, roller_value_changed_cb,
                         LV_EVENT_VALUE_CHANGED, NULL);
-    // 根据当前初始选择同步 ECO 状态
-    roller_value_changed_cb(NULL);
+    roller_value_changed_cb(NULL);  // 同步 ECO 状态
   }
-}
-
-// 阶段二：为 Screen2 的四个面板标签设置固定文本
-void init_screen2_static_data(void) {
-  if (ui_Label1) lv_label_set_text(ui_Label1, "2.5 Kpa\n30°C");
-  if (ui_Label3) lv_label_set_text(ui_Label3, "2.5 Kpa\n30°C");
-  if (ui_Label4) lv_label_set_text(ui_Label4, "2.5 Kpa\n30°C");
-  if (ui_Label5) lv_label_set_text(ui_Label5, "2.5 Kpa\n30°C");
 }
 
 void init_time_display(void) {  // 初始化时间显示控件
@@ -68,7 +51,7 @@ void init_time_display(void) {  // 初始化时间显示控件
 static lv_timer_t* left_turn_signal_timer = NULL;
 static lv_timer_t* right_turn_signal_timer = NULL;
 
-// 设置使用 "CHECKED" 状态来控制亮/灭的灯光
+// 设置切换 "CHECKED" 状态属性来控制亮/灭的灯光
 // (适用于远光灯, ECO, 安全带, 发动机, 机油灯)
 static void set_light_state_by_checked(lv_obj_t* light_obj, bool state) {
   if (light_obj == NULL) return;

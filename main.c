@@ -72,8 +72,6 @@ int main(int argc, char **argv)
     init_time_display();
     // Roller 联动 ECO 
     init_phase2_features();
-    // Screen2 静态数据
-    init_screen2_static_data();
 
     // 数据驱动的 UI 定时刷新（100ms）
     lv_timer_create(update_ui_from_state, 100, NULL);
