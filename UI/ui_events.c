@@ -4,19 +4,18 @@
 // Project name: SquareLine_Project
 
 #include "ui.h"
-#include "ui_helpers.h"
 
 void EngineIconBright(lv_event_t * e)
 {
-
+	// Your code here
 }
 
 void SeatBeltIconBright(lv_event_t * e)
 {
-
+	// Your code here
 }
 
 void LowEngineOilIconBright(lv_event_t * e)
 {
-
+	// Your code here
 }
