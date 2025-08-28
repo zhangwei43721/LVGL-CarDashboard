@@ -55,9 +55,4 @@ void handle_console_input(void);       // 处理控制台输入的函数
 void init_roller_event_handler(void);  // 绑定 Roller 事件并同步 ECO
 void init_all_lights_test(void);       // 启动自检：点亮所有灯光
 
-lv_anim_t *Leftflash_Animation(lv_obj_t *TargetObject,
-                               int delay);  // 左转向灯动画
-lv_anim_t *Rightflash_Animation(lv_obj_t *TargetObject,
-                                int delay);  // 右转向灯动画
-
 #endif /* __HEAD_H__ */
