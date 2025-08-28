@@ -152,10 +152,16 @@ static void process_command(char* cmd) {
     if (strcmp(target, "左转") == 0) {
       // 根据是否在闪烁来反转
       bool turning_on = (left_turn_signal_timer == NULL);
+      if (right_turn_signal_timer != NULL) {
+        control_manual_flashing(ui_Right, false, &right_turn_signal_timer);
+      }
       control_manual_flashing(ui_Left, turning_on, &left_turn_signal_timer);
       return;
     } else if (strcmp(target, "右转") == 0) {
       bool turning_on = (right_turn_signal_timer == NULL);
+      if (left_turn_signal_timer != NULL) {
+        control_manual_flashing(ui_Left, false, &left_turn_signal_timer);
+      }
       control_manual_flashing(ui_Right, turning_on, &right_turn_signal_timer);
       return;
     } else if (strcmp(target, "双闪") == 0) {

@@ -79,8 +79,8 @@ int main(int argc, char **argv)
     /* 主循环 */
     while(1) {
         handle_console_input();
-        lv_timer_handler();
-        usleep(5 * 1000);
+        uint32_t time_to_wait_ms = lv_timer_handler();
+        usleep(time_to_wait_ms * 1000);
     }
 
     return 0;
@@ -151,13 +151,17 @@ static void hal_init(void)
     /* ======================================= */
     /*              ARM 平台初始化              */
     /* ======================================= */
-    #define DISP_BUF_SIZE (128 * 1024)
+    #define DISP_BUF_SIZE (800 * 480)
 
     fbdev_init();
 
-    static lv_color_t buf[DISP_BUF_SIZE];
+    // 2. 创建两个静态的颜色缓冲区
+    static lv_color_t buf_1[DISP_BUF_SIZE];
+    static lv_color_t buf_2[DISP_BUF_SIZE];
+
+    // 3. 初始化绘制缓冲区，同时传入两个 buffer
     static lv_disp_draw_buf_t disp_buf;
-    lv_disp_draw_buf_init(&disp_buf, buf, NULL, DISP_BUF_SIZE);
+    lv_disp_draw_buf_init(&disp_buf, buf_1, buf_2, DISP_BUF_SIZE);
 
     static lv_disp_drv_t disp_drv;
     lv_disp_drv_init(&disp_drv);

@@ -9,10 +9,12 @@ VehicleState g_vehicle_state = {
     .rpm = 0,                   // 发动机转速 (转/分钟)
     .water_temp = 40,           // 水温 (摄氏度)
     .fuel_level = 50,           // 燃油量 (百分比)
+
     .tire_pressure_fl = 250,    // 左前轮胎压力 (kPa)
     .tire_pressure_fr = 250,    // 右前轮胎压力 (kPa)
     .tire_pressure_bl = 250,    // 左后轮胎压力 (kPa)
     .tire_pressure_br = 250,    // 右后轮胎压力 (kPa)
+
     .total_mileage = 16863.0f,  // 总里程 (公里)
     .trip_mileage = 0.0f,       // 本次行程里程 (公里)
 };
