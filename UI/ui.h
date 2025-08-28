@@ -33,6 +33,7 @@ extern lv_anim_t * Rightflash_Animation(lv_obj_t * TargetObject, int delay);
 extern lv_obj_t * ui____initial_actions0;
 
 // IMAGES AND IMAGE SETS
+LV_IMG_DECLARE(ui_img_1401202660);    // assets/组 119.png
 LV_IMG_DECLARE(ui_img_1276914373);    // assets/组 84.png
 LV_IMG_DECLARE(ui_img_1103686941);    // assets/组 8.png
 LV_IMG_DECLARE(ui_img_170937940);    // assets/分组 1.png
@@ -44,6 +45,7 @@ LV_IMG_DECLARE(ui_img_837428543);    // assets/组 37.png
 LV_IMG_DECLARE(ui_img_1181061765);    // assets/组 40.png
 LV_IMG_DECLARE(ui_img_896081354);    // assets/路径 192.png
 LV_IMG_DECLARE(ui_img_896082379);    // assets/路径 193.png
+LV_IMG_DECLARE(ui_img_1181066113);    // assets/组 44.png
 LV_IMG_DECLARE(ui_img_869378988);    // assets/组 76.png
 LV_IMG_DECLARE(ui_img_424233258);    // assets/组 100.png
 LV_IMG_DECLARE(ui_img_1357980260);    // assets/组 90.png

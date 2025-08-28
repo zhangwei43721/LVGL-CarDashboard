@@ -14,7 +14,7 @@
 #include "lvgl/examples/lv_examples.h"
 #include "lvgl/lvgl.h"
 
-// --- 阶段三：车辆状态数据模型 ---
+// --- 车辆状态数据模型 ---
 typedef struct {
   // --- 主要仪表数据 ---
   int speed;       // 速度 (0-220 km/h)

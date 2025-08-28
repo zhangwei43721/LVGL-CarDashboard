@@ -133,7 +133,7 @@ static void startup_selftest_off_cb(lv_timer_t* timer) {
   // 隐藏报警灯
   set_light_state_by_hidden(ui_TempWarning, false);
   // 熄灭转向灯图标
-  if (ui_Left)  lv_obj_set_style_opa(ui_Left,  LV_OPA_TRANSP, 0);
+  if (ui_Left) lv_obj_set_style_opa(ui_Left, LV_OPA_TRANSP, 0);
   if (ui_Right) lv_obj_set_style_opa(ui_Right, LV_OPA_TRANSP, 0);
   // 删除自身，确保仅执行一次
   lv_timer_del(timer);
@@ -175,10 +175,22 @@ static void process_command(char* cmd) {
       bool turning_on = (right_turn_signal_timer == NULL);
       control_manual_flashing(ui_Right, turning_on, &right_turn_signal_timer);
       return;
+    } else if (strcmp(target, "双闪") == 0) {
+      bool turning_on =
+          (left_turn_signal_timer == NULL && right_turn_signal_timer == NULL);
+      control_manual_flashing(ui_Left, turning_on, &left_turn_signal_timer);
+      control_manual_flashing(ui_Right, turning_on, &right_turn_signal_timer);
+      return;
     } else if (strcmp(target, "远光") == 0) {
       if (ui_High_beam) {
         bool now_on = lv_obj_has_state(ui_High_beam, LV_STATE_CHECKED);
         set_light_state_by_checked(ui_High_beam, !now_on);
+      }
+      return;
+    } else if (strcmp(target, "近光") == 0) {
+      if (ui_Low_beam) {
+        bool now_on = lv_obj_has_state(ui_Low_beam, LV_STATE_CHECKED);
+        set_light_state_by_checked(ui_Low_beam, !now_on);
       }
       return;
     } else if (strcmp(target, "安全带") == 0) {
@@ -191,11 +203,15 @@ static void process_command(char* cmd) {
   }
 
   if (items != 2) {
-    printf("无效指令。可输入：左转 / 右转 / 远光 / 安全带 \n");
+    printf("无效指令！ 可输入：左转 / 右转 / 远光 / 近光 / 安全带 /胎压 \n");
     return;
   }
 
-  if (strcmp(target, "速度") == 0) {
+  if (strcmp(target, "双闪") == 0) {
+    bool is_on = (strcmp(action, "开") == 0);
+    control_manual_flashing(ui_Left, is_on, &left_turn_signal_timer);
+    control_manual_flashing(ui_Right, is_on, &right_turn_signal_timer);
+  } else if (strcmp(target, "速度") == 0) {
     char* endp = NULL;
     long v = strtol(action, &endp, 10);
     if (endp == action) {
