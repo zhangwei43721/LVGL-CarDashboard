@@ -38,11 +38,10 @@
 
 ## 🚀 快速上手 (Getting Started)
 
-首先，克隆仓库并初始化子模块：
+首先，克隆仓库：
 ```bash
-git clone https://github.com/your-username/your-repo-name.git
-cd your-repo-name
-git submodule update --init --recursive
+git clone https://github.com/zhangwei43721/LVGL-CarDashboard.git
+cd LVGL-CarDashboard
 ```
 
 接下来，根据你的目标平台选择相应的构建方式。
