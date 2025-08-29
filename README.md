@@ -1,110 +1,158 @@
-# LVGL for frame buffer device
+# LVGL 跨平台汽车仪表盘模拟器
 
-LVGL configured to work with /dev/fb0 on Linux.
+这是一个基于 [LVGL](https://lvgl.io) 图形库构建的、功能丰富的汽车仪表盘模拟器。项目被设计为**跨平台**的，既可以在 **Linux PC** 上通过 SDL 进行快速开发和预览，也可以直接交叉编译，在**嵌入式 ARM Linux** 开发板 (如 GEC6818) 上通过 Framebuffer (`/dev/fb0`) 高效运行。
 
-When cloning this repository, also make sure to download submodules (`git submodule update --init --recursive`) otherwise you will be missing key components.
+最重要的是，项目已**内置预编译的 `freetype` 库**，无需手动安装，实现了开箱即用。
 
-Check out this blog post for a step by step tutorial:
-https://blog.lvgl.io/2018-01-03/linux_fb
-
-## 项目结构
-
-该项目是 LVGL 图形库在 Linux 平台下的一个移植模板，其结构清晰，模块化，主要包含以下部分：
-
-*   **`main.c`**: 应用程序的主入口文件。LVGL的初始化、驱动注册以及UI界面的创建都在这里完成。
-
-*   **`lvgl/`**: 核心的 LVGL 图形库。它以git子模块的形式被包含。这里包含了所有UI控件（按钮、标签、图表等）、渲染引擎和动画框架。
-
-*   **`lv_drivers/`**: LVGL的驱动集合，同样以git子模块的形式存在。它负责将LVGL的绘图指令连接到具体的显示后端（如 Framebuffer, SDL），并从输入设备（如鼠标、键盘、触摸屏）读取数据。
-
-*   **`lv_conf.h`**: LVGL库的配置文件，用于启用/禁用特性、调整内存缓冲区大小等。
-
-*   **`lv_drv_conf.h`**: `lv_drivers` 驱动库的配置文件。
-
-*   **`CMakeLists.txt` & `Makefile`**: 项目的构建系统文件。定义了如何编译源代码、链接库文件，并最终生成可执行文件。
-
-*   **`build/`**: 默认的编译输出目录。CMake生成的所有中间文件和最终的可执行文件都存放在这里。
+![汽车仪表盘运行截图](img/image.png)
 
 ---
 
-## 使用说明
+## ✨ 功能特性
 
-以下步骤在 Linux 下测试通过：
+- **跨平台支持**: 一套代码，无缝支持 PC (SDL) 与 嵌入式 Linux (Framebuffer)。
+- **依赖自包含**: 内置 `freetype` 库，无需系统级安装，简化了环境配置。
+- **实时仪表模拟**: 动态显示速度、转速、水温和油量，指针带有平滑的动画效果。
+- **指示灯与告警**: 包括左右转向灯、远光灯、安全带未系提醒、高温、低油量和胎压异常告警。
+- **启动自检模式**: 程序启动前2秒会自动点亮所有指示灯，方便检查UI元素是否正常。
+- **控制台实时交互**: 无需重新编译，直接在终端输入指令即可模拟各种车辆数据变化。
 
-1. 配置与编译
-   ```bash
-   cmake -S . -B build
-   cmake --build build -j
-   ```
-2. 运行
-   ```bash
-   ./bin/main
-   ```
+## 📦 环境准备
 
-程序启动后会打开 SDL 窗口。主循环每 5ms 轮询 LVGL，同时每 100ms 通过定时器将“车辆状态数据模型”渲染到 UI
+得益于自包含的依赖，您需要准备的环境非常少。
 
-启动后前 2 秒会进入“自检模式”，所有主要灯光将被点亮，方便检查灯光是否损坏；自检结束后恢复正常联动与告警逻辑
+#### 1. 对于 PC / SDL 开发与仿真
 
-## 控制台指令（实时模拟）
+- **Git**, **CMake** (版本 3.12+), **C/C++ 编译器** (如 `build-essential`)
+- **SDL2 开发库** (这是唯一需要在 PC 上安装的外部依赖):
+  ```bash
+  # 对于 Ubuntu/Debian 系统
+  sudo apt-get install libsdl2-dev
+  ```
 
-在程序运行的同时，直接在终端输入命令来模拟仪表数据。
+#### 2. 对于嵌入式 ARM Linux (以 GEC6818 为例)
 
-简化指令（直接反转灯状态）：
+- **ARM 交叉编译工具链**: 例如 `arm-linux-gcc 5.4.0`。
+
+**您无需手动安装 FreeType 库 (`libfreetype-dev`)**，本项目已在 `libs/` 目录下为您准备好了！
+
+## 🚀 快速上手 (Getting Started)
+
+首先，克隆仓库并初始化子模块：
+```bash
+git clone https://github.com/your-username/your-repo-name.git
+cd your-repo-name
+git submodule update --init --recursive
+```
+
+接下来，根据你的目标平台选择相应的构建方式。
+
+### 方式一: 在 PC 上编译和运行 (用于开发/预览)
+
+这种方式会生成一个本地可执行文件，并使用 SDL 窗口来显示仪表盘。
+
+1.  **编译项目**:
+    ```bash
+    cmake -S . -B build
+    cmake --build build -j12
+    ```
+
+2.  **运行程序**:
+    ```bash
+    ./build/bin/main
+    ```
+
+### 方式二: 交叉编译并在 ARM 开发板上运行
+
+这种方式会使用交叉编译工具链生成 ARM 平台的可执行文件。
+
+1.  **配置交叉编译**:
+    请根据你的实际路径修改 `arm-toolchain.cmake` 文件中的工具链位置。
+
+2.  **编译项目**:
+    使用 `-DCMAKE_TOOLCHAIN_FILE` 参数来指定交叉编译配置。
+    ```bash
+    cmake -S . -B build_arm -DCMAKE_TOOLCHAIN_FILE=arm-toolchain.cmake
+    cmake --build build_arm -j12
+    ```
+
+3.  **部署和运行**:
+    部署时，需要将**可执行文件**和它依赖的**库文件**一起传输到开发板。
+
+    a.  **传输可执行文件**:
+        将 `build_arm/bin/main` 传输到开发板的任意位置（例如 `/root`）。
+
+    b.  **传输 `freetype` 库**:
+        将 `libs/freetype/lib/arm/` 目录下的所有 `libfreetype.so*` 文件全部传输到开发板上，**并放在与 `main` 可执行文件相同的目录下**。
+
+    c.  **传输 UI 资源**:
+        将项目根目录下的 `UI/` 文件夹完整地传输到开发板，同样放在 `main` 所在的目录。
+
+    最终，你在开发板上的目录结构应该如下所示：
+    ```
+    /root/
+    ├── main                 (可执行文件)
+    ├── libfreetype.so       (库文件)
+    ├── libfreetype.so.6     (库文件)
+    ├── libfreetype.so.6.20.2 (库文件)
+    └── UI/                  (资源目录)
+        ├── fonts/
+        └── images/
+    ```
+
+    d.  **运行程序**:
+        在开发板终端中，进入程序所在目录并运行。
+        ```bash
+        cd /root/
+        chmod +x ./main  # 赋予执行权限
+        ./main
+        ```
+    > **工作原理**: 项目编译时设置了 `RPATH=.`，这会告诉程序在运行时，首先在自己的当前目录下查找所需的 `.so` 库文件。
+
+
+## 🎮 本程序支持的控制台指令
+
+在程序运行时，直接在当前终端输入以下命令并按回车，即可实时模拟车辆状态。
+
+#### 开关类指令 (直接切换状态)
 
 - `左转`
 - `右转`
 - `远光`
 - `安全带`
 
-设置指令：`<目标> <数值>` 或 `胎压 <位置> <kPa>`。
+#### 数值设置指令
 
-- 速度：`速度 0..220`（km/h）
-- 转速：`转速 0..8000`（RPM）
-- 水温：`水温 0..150`（°C）
-- 油量：`油量 0..100`（%）
-- 胎压：`胎压 左前|右前|左后|右后 <0..500>`（kPa）
+- **速度**: `速度 <0-220>` (km/h)
+- **转速**: `转速 <0-8000>` (RPM)
+- **水温**: `水温 <0-150>` (°C)
+- **油量**: `油量 <0-100>` (%)
+- **胎压**: `胎压 <位置> <0-500>` (kPa) (位置: `左前`, `右前`, `左后`, `右后`)
 
-滚动选项`Roller` 与 ECO 联动：滚轮选中索引 mod 3 == 1 时点亮 ECO
+## 🔧 架构与实现
 
-## 数据驱动与联动规则
+#### 跨平台构建系统
 
-- 单一数据源：`obj/head.h` 中定义 `VehicleState`，全局实例为 `g_vehicle_state`。
-- 定时渲染：`obj/control.c::update_ui_from_state()` 每 100ms 根据 `g_vehicle_state` 更新：
-  - 指针动画：`ui_KmPoint`（速度）、`ui_TMeterpoint`（转速）、`ui_TempPoint`（水温）、`ui_OilPoint`（油量）
-  - 标签更新：四个胎压标签文本与颜色、`ui_ODO`、`ui_TRIP`
-  - 告警逻辑：
-    - 水温报警：`water_temp > 100°C` → 显示 `ui_TempWarning`
-    - 低油量：`fuel_level < 10%` → 置 `ui_Low_engine_oil` 为 CHECKED
-    - 胎压文字变红：`< 180` 或 `> 280 kPa`
+项目使用 **CMake** 实现跨平台支持。`CMakeLists.txt` 文件通过 `if(CMAKE_CROSSCOMPILING)` 条件判断来区分是本地编译还是交叉编译，并链接不同的平台依赖库（PC 链接 SDL2，ARM 链接 pthread）。
 
-### 表指针映射公式（角度单位为 0.1°）
+#### 平台抽象
 
-- 速度：`0..220 km/h  →  0..2450`  即 `angle = 2450/220 * speed`
-- 转速：`0..8000 rpm  →  0..2430`  即 `angle = 2430/8000 * rpm`
-- 水温：`0..150 °C   →  0..900`   即 `angle = 900/150 * temp`
-- 油量：`0..100 %    →  900..1800` 即 `angle = 900 + 900/100 * fuel`
+在 `main.c` 中，通过预处理器指令 (`#ifdef LV_LVGL_H_INCLUDE_SIMPLE`) 来选择性地包含和初始化不同的驱动：
+- **PC 平台**: 初始化 SDL 视频和输入驱动。
+- **ARM 平台**: 初始化 Framebuffer (`fbdev`) 和 `evdev` 输入设备驱动。
 
-这些映射在 `obj/control.c` 中实现。
-所有角度通过统一动画函数缓动至目标值，过渡时间 300ms（ease-in-out）。
+这使得核心的 UI 和业务逻辑代码 (`obj/`, `UI/`) 无需关心底层硬件，实现了高度解耦。
 
-### 里程累加
+## ❔ 常见问题 (FAQ)
 
-每个渲染周期按速度积分：`Δkm = speed(km/h) * period_ms / 3600000`，累加至 `total_mileage` 与 `trip_mileage` 并取整显示。
+- **Q: PC运行后没有出现窗口？**
+  **A:** 请确保您已经成功安装了 `libsdl2-dev` 开发库。
 
-## 代码入口与组织
+- **Q: 在开发板上运行提示 `libfreetype.so: cannot open shared object file`？**
+  **A:** 这是最常见的问题。请确保你已经将 `libs/freetype/lib/arm/` 目录下的 **所有 `libfreetype.so*` 文件** 拷贝到了开发板，并且它们与 `main` 可执行文件**在同一个目录**下。
 
-- 主程序：`main.c`
-  - 初始化 LVGL/UI
-  - 创建时间显示定时器（1s）与数据渲染定时器（100ms）
-  - 主循环：`handle_console_input()` + `lv_timer_handler()`
-- 控制台解析：`obj/callback.c`
-  - 解析所有上述命令
-  - 非数据项（如指示灯）直接操作 UI；数据项仅更新 `g_vehicle_state`
-- 数据渲染与联动：`obj/control.c`
-  - 全部 UI 联动在此集中处理，确保解耦与可维护性
+- **Q: 为什么项目克隆后编译失败，提示找不到 `lvgl.h`?**
+  **A:** 很可能是你忘记了初始化git子模块。请运行 `git submodule update --init --recursive` 来下载 `lvgl` 和 `lv_drivers`。
 
-## 常见问题
-
-- 运行无窗口：请确认使用 SDL2 构建（PC 模式），并安装了 `libsdl2-dev`。
-- 字体/图像缺失：请确认 `bin/` 与 `UI/images/`、`UI/fonts/` 资源完整。
-- 角度命令无效：表命令现在只做“角度→数据”的反向映射，指针移动由渲染器自动完成。
+- **Q: 交叉编译失败？**
+  **A:** 请检查 `arm-toolchain.cmake` 文件中的编译器路径是否正确，并确保交叉编译工具链可用。

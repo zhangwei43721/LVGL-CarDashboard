@@ -1,11 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/select.h>
-#include <time.h>
-#include <unistd.h>
-
-#include "../UI/ui.h"
 #include "head.h"
 
 // 用户控制相关代码

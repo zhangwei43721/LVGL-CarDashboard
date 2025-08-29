@@ -5,8 +5,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/select.h>  // io操作
+#include <sys/select.h>
 #include <time.h>
 #include <unistd.h>
+
+#include "../UI/ui.h"
 
 // #include "lv_png.h"
 #define SDL_MAIN_HANDLED

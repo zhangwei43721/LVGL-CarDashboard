@@ -1,4 +1,3 @@
-#include "../UI/ui.h"
 #include "head.h"
 
 // 联动控制相关代码
