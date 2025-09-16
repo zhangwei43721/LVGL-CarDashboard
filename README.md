@@ -1,6 +1,6 @@
 # LVGL 跨平台汽车仪表盘模拟器
 
-这是一个基于 [LVGL](https://lvgl.io) 图形库构建的、功能丰富的汽车仪表盘模拟器。项目被设计为**跨平台**的，既可以在 **Linux PC** 上通过 SDL 进行快速开发和预览，也可以直接交叉编译，在**嵌入式 ARM Linux** 开发板 (如 GEC6818) 上通过 Framebuffer (`/dev/fb0`) 高效运行。
+这是一个基于 [LVGL](https://lvgl.io) 图形库构建的、功能丰富的汽车仪表盘模拟器。项目被设计为**跨平台**的，既可以在 **Linux PC** 上通过 SDL 进行快速开发和预览，也可以直接交叉编译，在**嵌入式 ARM Linux** 开发板 (GEC6818) 上通过 Framebuffer (`/dev/fb0`) 高效运行。
 
 最重要的是，项目已**内置预编译的 `freetype` 库**，无需手动安装，实现了开箱即用。
 
@@ -82,7 +82,7 @@ cd LVGL-CarDashboard
         将 `build_arm/bin/main` 传输到开发板的任意位置（例如 `/root`）。
 
     b.  **传输 `freetype` 库**:
-        将 `libs/freetype/lib/arm/` 目录下的所有 `libfreetype.so*` 文件全部传输到开发板上，**并放在与 `main` 可执行文件相同的目录下**。
+        将 `libs/freetype/lib/arm/` 目录下的所有 `libfreetype.so*` 文件全部传输到开发板上，**并放在‘lib’目录下**。
 
     c.  **传输 UI 资源**:
         将项目根目录下的 `UI/` 文件夹完整地传输到开发板，同样放在 `main` 所在的目录。
