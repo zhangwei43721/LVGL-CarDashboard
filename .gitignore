@@ -1,3 +1,14 @@
+# --- General ---
+# Build output directory
+/build/
+
+# IDE & OS specific
+.vscode/settings.json
+.vscode/tasks.json
+*.DS_Store
+Thumbs.db
+
+# --- C/C++ build artifacts ---
 # Prerequisites
 *.d
 
@@ -6,7 +17,6 @@
 *.ko
 *.obj
 *.elf
-/build/
 
 # Linker output
 *.ilk
@@ -17,27 +27,36 @@
 *.gch
 *.pch
 
-# Libraries
+# --- Libraries & Executables ---
+# Rule: Ignore common binary files globally...
 *.lib
-*.a
 *.la
 *.lo
-
-# Shared objects (inc. Windows DLLs)
+*.a
 *.dll
 *.so
 *.so.*
 *.dylib
-
-# Executables
 *.exe
 *.out
 *.app
 *.i*86
 *.x86_64
 *.hex
+main
 
-# Debug files
+# Exception: ...BUT DO NOT ignore the pre-compiled libraries inside our libs/ folder.
+# We WANT to commit these to the repository.
+!libs/
+!libs/**/*.lib
+!libs/**/*.a
+!libs/**/*.dll
+!libs/**/*.so
+!libs/**/*.so.*
+!libs/**/*.dylib
+
+
+# --- Debug files ---
 *.dSYM/
 *.su
 *.idb
@@ -52,9 +71,3 @@ Module.symvers
 Mkfile.old
 dkms.conf
 /Debug/
-
-# IDE configs
-.vscode/settings.json
-.vscode/tasks.json
-
-main
